@@ -632,32 +632,15 @@ rule ariadne_all:
             RESULTS + "ariadne/report/elec_price_duration_curve.pdf",
             run=config_provider("run", "name"),
         ),
-        expand(
-            RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
-            run=config_provider("run", "name"),
-            **config["scenario"],
-            allow_missing=True,
-        ),
-        expand(
-            RESULTS
-            + "postnetworks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
-            run=config_provider("run", "name"),
-            **config["scenario"],
-            allow_missing=True,
-        ),
-        expand(
-            RESULTS + "ariadne/report/elec_price_duration_curve.pdf",
-            run=config_provider("run", "name"),
-        ),
-        expand(
-            RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
-            run=config_provider("run", "name"),
-            **config["scenario"],
-            allow_missing=True,
-        ),
+        # expand(
+        #     RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
+        #     run=config_provider("run", "name"),
+        #     **config["scenario"],
+        #     allow_missing=True,
+        # ),
         expand(
             RESULTS
-            + "networks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
+            + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
             run=config_provider("run", "name"),
             **config["scenario"],
             allow_missing=True,
@@ -789,7 +772,7 @@ rule pricing_analysis:
     input:
         networks=lambda wildcards: expand(
             RESULTS
-            + "postnetworks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc",
+            + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc",
             lt_st=wildcards.lt_st,
             **{k: v for k, v in config["scenario"].items() if k != "lt_st"},
             allow_missing=True,
@@ -821,7 +804,7 @@ rule pricing_analysis:
 #     input:
 #         networks=expand(
 #             RESULTS
-#             + "postnetworks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc",
+#             + "networks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc",
 #             **config["scenario"],
 #             allow_missing=True,
 #         ),
@@ -849,7 +832,7 @@ rule pricing_analysis:
 #     input:
 #         networks=expand(
 #             RESULTS
-#             + "postnetworks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc",
+#             + "networks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc",
 #             **config["scenario"],
 #             allow_missing=True,
 #         ),
@@ -887,7 +870,7 @@ rule pricing_plots:
     input:
         networks=lambda wildcards: expand(
             RESULTS
-            + "postnetworks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc",
+            + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc",
             lt_st=wildcards.lt_st,
             **{k: v for k, v in config["scenario"].items() if k != "lt_st"},
             allow_missing=True,

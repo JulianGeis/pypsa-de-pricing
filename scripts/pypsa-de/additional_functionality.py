@@ -569,59 +569,59 @@ def add_co2limit_country(n, limit_countries, snakemake):
             ).sum()
         )
 
-            incoming_methanol = n.links.index[
-                n.links.index == "EU methanol -> DE methanol"
-            ]
-            outgoing_methanol = n.links.index[
-                n.links.index == "DE methanol -> EU methanol"
-            ]
+        incoming_methanol = n.links.index[
+            n.links.index == "EU methanol -> DE methanol"
+        ]
+        outgoing_methanol = n.links.index[
+            n.links.index == "DE methanol -> EU methanol"
+        ]
 
-            lhs.append(
-                (
-                    -1
-                    * n.model["Link-p"].loc[:, incoming_methanol]
-                    / snakemake.config["sector"]["MWh_MeOH_per_tCO2"]
-                    * n.snapshot_weightings.generators
-                ).sum()
-            )
+        lhs.append(
+            (
+                -1
+                * n.model["Link-p"].loc[:, incoming_methanol]
+                / snakemake.config["sector"]["MWh_MeOH_per_tCO2"]
+                * n.snapshot_weightings.generators
+            ).sum()
+        )
 
-            lhs.append(
-                (
-                    n.model["Link-p"].loc[:, outgoing_methanol]
-                    / snakemake.config["sector"]["MWh_MeOH_per_tCO2"]
-                    * n.snapshot_weightings.generators
-                ).sum()
-            )
+        lhs.append(
+            (
+                n.model["Link-p"].loc[:, outgoing_methanol]
+                / snakemake.config["sector"]["MWh_MeOH_per_tCO2"]
+                * n.snapshot_weightings.generators
+            ).sum()
+        )
 
-            # Methane
-            incoming_CH4 = n.links.index[n.links.index == "EU renewable gas -> DE gas"]
-            outgoing_CH4 = n.links.index[n.links.index == "DE renewable gas -> EU gas"]
+        # Methane
+        incoming_CH4 = n.links.index[n.links.index == "EU renewable gas -> DE gas"]
+        outgoing_CH4 = n.links.index[n.links.index == "DE renewable gas -> EU gas"]
 
-            lhs.append(
-                (
-                    -1
-                    * n.model["Link-p"].loc[:, incoming_CH4]
-                    * 0.198
-                    * n.snapshot_weightings.generators
-                ).sum()
-            )
+        lhs.append(
+            (
+                -1
+                * n.model["Link-p"].loc[:, incoming_CH4]
+                * 0.198
+                * n.snapshot_weightings.generators
+            ).sum()
+        )
 
-            lhs.append(
-                (
-                    n.model["Link-p"].loc[:, outgoing_CH4]
-                    * 0.198
-                    * n.snapshot_weightings.generators
-                ).sum()
-            )
+        lhs.append(
+            (
+                n.model["Link-p"].loc[:, outgoing_CH4]
+                * 0.198
+                * n.snapshot_weightings.generators
+            ).sum()
+        )
 
-            lhs = sum(lhs)
+        lhs = sum(lhs)
 
-            cname = f"co2_limit-{ct}"
+        cname = f"co2_limit-{ct}"
 
-            n.model.add_constraints(
-                lhs <= limit,
-                name=f"GlobalConstraint-{cname}",
-            )
+        n.model.add_constraints(
+            lhs <= limit,
+            name=f"GlobalConstraint-{cname}",
+        )
 
         if cname in n.global_constraints.index:
             logger.warning(
@@ -996,8 +996,8 @@ def additional_functionality(n, snapshots, snakemake):
 
     # add_power_limits(n, investment_year, constraints["limits_power_max"])
 
-    if snakemake.wildcards.clusters != "1":
-        h2_import_limits(n, investment_year, constraints["limits_volume_max"])
+    # if snakemake.wildcards.clusters != "1":
+    #     h2_import_limits(n, investment_year, constraints["limits_volume_max"])
 
     #     electricity_import_limits(n, investment_year, constraints["limits_volume_max"])
 
@@ -1009,7 +1009,7 @@ def additional_functionality(n, snapshots, snakemake):
     #         constraints["limits_volume_max"],
     #     )
 
-    add_h2_derivate_limit(n, investment_year, constraints["limits_volume_max"])
+    # add_h2_derivate_limit(n, investment_year, constraints["limits_volume_max"])
 
     # # force_boiler_profiles_existing_per_load(n)
     # force_boiler_profiles_existing_per_boiler(n)

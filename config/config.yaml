@@ -4,12 +4,12 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250407-Pricing
+  prefix: 20250409-Pricing-Merge
 
   name:
-  - KN2045_Bal_v4
-  - KN2045_Bal_v4_voll
-  - KN2045_Bal_v4_voll_1H 
+  # - KN2045_Bal_v4
+  # - KN2045_Bal_v4_voll
+  # - KN2045_Bal_v4_voll_1H 
   # - KN2045_Bal_v4_24H
   # - KN2045_Bal_v4_365H
   # - KN2045_Bal_v4_elastic5GW
@@ -197,7 +197,7 @@ lines:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
-  retrieve: false # set to false once initial data is retrieved
+  retrieve: true # set to false once initial data is retrieved
   retrieve_cutout: false # set to false once initial data is retrieved
 clustering:
   temporal:
@@ -566,7 +566,7 @@ solving:
 
   solver:
     name: gurobi
-    options: gurobi-default
+    options: gurobi-elastic
 
   solver_options:
       gurobi-elastic: # elastic cases still getting suboptimal solutions but making sense

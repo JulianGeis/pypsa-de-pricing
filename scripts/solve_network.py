@@ -133,7 +133,7 @@ def add_land_use_constraint_perfect(n: pypsa.Network) -> None:
         n.buses.loc[bus, name] = df_carrier.p_nom_max.values
 
 
-def add_land_use_constraint(n, snakemake=None: pypsa.Network, planning_horizons: str) -> None:
+def add_land_use_constraint(n: pypsa.Network, planning_horizons: str) -> None:
     """
     Add land use constraints for renewable energy potential.
 
@@ -311,6 +311,8 @@ def add_carbon_constraint(n: pypsa.Network, snapshots: pd.DatetimeIndex) -> None
             rhs = glc.constant
             n.model.add_constraints(lhs <= rhs, name=f"GlobalConstraint-{name}")
 
+    logger.info("Added global co2 constraint to model")
+
 
 def add_carbon_budget_constraint(n: pypsa.Network, snapshots: pd.DatetimeIndex) -> None:
     glcs = n.global_constraints.query('type == "Co2Budget"')
@@ -420,6 +422,7 @@ def prepare_network(
     planning_horizons: str | None,
     co2_sequestration_potential: dict[str, float],
     limit_max_growth: dict[str, Any] | None = None,
+    snakemake: Any = None,
 ) -> None:
     """
     Prepare network with various constraints and modifications.
@@ -983,76 +986,6 @@ def add_co2_atmosphere_constraint(n, snapshots):
             n.model.add_constraints(lhs <= rhs, name=f"GlobalConstraint-{name}")
 
 
-def solve_network(n, config, params, solving, snakemake=None, **kwargs):
-
-def extra_functionality(
-    n: pypsa.Network, snapshots: pd.DatetimeIndex, planning_horizons: str | None = None
-) -> None:
-    """
-    Add custom constraints and functionality.
-
-    Parameters
-    ----------
-    n : pypsa.Network
-        The PyPSA network instance with config and params attributes
-    snapshots : pd.DatetimeIndex
-        Simulation timesteps
-    planning_horizons : str, optional
-        The current planning horizon year or None in perfect foresight
-
-    Collects supplementary constraints which will be passed to
-    ``pypsa.optimization.optimize``.
-
-    If you want to enforce additional custom constraints, this is a good
-    location to add them. The arguments ``opts`` and
-    ``snakemake.config`` are expected to be attached to the network.
-    """
-    config = n.config
-    constraints = config["solving"].get("constraints", {})
-    if constraints["BAU"] and n.generators.p_nom_extendable.any():
-        add_BAU_constraints(n, config)
-    if constraints["SAFE"] and n.generators.p_nom_extendable.any():
-        add_SAFE_constraints(n, config)
-    if constraints["CCL"] and n.generators.p_nom_extendable.any():
-        add_CCL_constraints(n, config, planning_horizons)
-
-        reserve = config["electricity"].get("operational_reserve", {})
-        if reserve.get("activate"):
-            add_operational_reserve_margin(n, snapshots, config)
-
-        if EQ_o := constraints["EQ"]:
-            add_EQ_constraints(n, EQ_o.replace("EQ", ""))
-
-        if {"solar-hsat", "solar"}.issubset(
-            config["electricity"]["renewable_carriers"]
-        ) and {"solar-hsat", "solar"}.issubset(
-            config["electricity"]["extendable_carriers"]["Generator"]
-        ):
-            add_solar_potential_constraints(n, config)
-
-        add_battery_constraints(n)
-        add_lossy_bidirectional_link_constraints(n)
-        add_pipe_retrofit_constraint(n)
-        if n._multi_invest:
-            add_carbon_constraint(n, snapshots)
-            add_carbon_budget_constraint(n, snapshots)
-            add_retrofit_gas_boiler_constraint(n, snapshots)
-        else:
-            add_co2_atmosphere_constraint(n, snapshots)
-
-        if config["sector"]["enhanced_geothermal"]["enable"]:
-            add_flexible_egs_constraint(n)
-
-    if n.params.custom_extra_functionality:
-        source_path = pathlib.Path(n.params.custom_extra_functionality).resolve()
-        assert source_path.exists(), f"{source_path} does not exist"
-        sys.path.append(os.path.dirname(source_path))
-        module_name = os.path.splitext(os.path.basename(source_path))[0]
-        module = importlib.import_module(module_name)
-        custom_extra_functionality = getattr(module, module_name)
-        custom_extra_functionality(n, snapshots, snakemake)  # pylint: disable=E0601
-
-
 def check_objective_value(n: pypsa.Network, solving: dict) -> None:
     """
     Check if objective value matches expected value within tolerance.
@@ -1088,6 +1021,7 @@ def solve_network(
     solving: dict,
     rule_name: str | None = None,
     planning_horizons: str | None = None,
+    snakemake: Any = None,
     **kwargs,
 ) -> None:
     """
@@ -1126,6 +1060,76 @@ def solve_network(
     ObjectiveValueError
         If objective value differs from expected value
     """
+
+    # define extra_functionality within solve so that snakemake object can be accessed
+    def extra_functionality(
+        n: pypsa.Network, snapshots: pd.DatetimeIndex, planning_horizons: str | None = None
+    ) -> None:
+        """
+        Add custom constraints and functionality.
+
+        Parameters
+        ----------
+        n : pypsa.Network
+            The PyPSA network instance with config and params attributes
+        snapshots : pd.DatetimeIndex
+            Simulation timesteps
+        planning_horizons : str, optional
+            The current planning horizon year or None in perfect foresight
+
+        Collects supplementary constraints which will be passed to
+        ``pypsa.optimization.optimize``.
+
+        If you want to enforce additional custom constraints, this is a good
+        location to add them. The arguments ``opts`` and
+        ``snakemake.config`` are expected to be attached to the network.
+        """
+        config = n.config
+        constraints = config["solving"].get("constraints", {})
+        if constraints["BAU"] and n.generators.p_nom_extendable.any():
+            add_BAU_constraints(n, config)
+        if constraints["SAFE"] and n.generators.p_nom_extendable.any():
+            add_SAFE_constraints(n, config)
+        if constraints["CCL"] and n.generators.p_nom_extendable.any():
+            add_CCL_constraints(n, config, planning_horizons)
+
+        reserve = config["electricity"].get("operational_reserve", {})
+        if reserve.get("activate"):
+            add_operational_reserve_margin(n, snapshots, config)
+
+        if EQ_o := constraints["EQ"]:
+            add_EQ_constraints(n, EQ_o.replace("EQ", ""))
+
+        if {"solar-hsat", "solar"}.issubset(
+            config["electricity"]["renewable_carriers"]
+        ) and {"solar-hsat", "solar"}.issubset(
+            config["electricity"]["extendable_carriers"]["Generator"]
+        ):
+            add_solar_potential_constraints(n, config)
+
+        add_battery_constraints(n)
+        add_lossy_bidirectional_link_constraints(n)
+        add_pipe_retrofit_constraint(n)
+        if n._multi_invest:
+            add_carbon_constraint(n, snapshots)
+            add_carbon_budget_constraint(n, snapshots)
+            add_retrofit_gas_boiler_constraint(n, snapshots)
+        else:
+            add_co2_atmosphere_constraint(n, snapshots)
+
+        if config["sector"]["enhanced_geothermal"]["enable"]:
+            add_flexible_egs_constraint(n)
+
+        if n.params.custom_extra_functionality:
+            source_path = pathlib.Path(n.params.custom_extra_functionality).resolve()
+            assert source_path.exists(), f"{source_path} does not exist"
+            sys.path.append(os.path.dirname(source_path))
+            module_name = os.path.splitext(os.path.basename(source_path))[0]
+            module = importlib.import_module(module_name)
+            custom_extra_functionality = getattr(module, module_name)
+            custom_extra_functionality(n, snapshots, snakemake)  # pylint: disable=E0601
+
+
     set_of_options = solving["solver"]["options"]
     cf_solving = solving["options"]
 
@@ -1208,8 +1212,8 @@ if __name__ == "__main__":
             opts="",
             ll="vopt",
             sector_opts="none",
-            planning_horizons="2025",
-            run="KN2045_Bal_v4_24H",
+            planning_horizons="2020",
+            run="KN2045_Bal_v4_voll",
         )
     configure_logging(snakemake)
     set_scenario_config(snakemake)
@@ -1229,6 +1233,7 @@ if __name__ == "__main__":
         planning_horizons=planning_horizons,
         co2_sequestration_potential=snakemake.params["co2_sequestration_potential"],
         limit_max_growth=snakemake.params.get("sector", {}).get("limit_max_growth"),
+        snakemake=snakemake,
     )
 
     logging_frequency = snakemake.config.get("solving", {}).get(
@@ -1244,6 +1249,7 @@ if __name__ == "__main__":
             solving=snakemake.params.solving,
             planning_horizons=planning_horizons,
             rule_name=snakemake.rule,
+            snakemake=snakemake,
         )
 
     logger.info(f"Maximum memory usage: {mem.mem_usage}")

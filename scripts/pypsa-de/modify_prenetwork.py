@@ -1,13 +1,12 @@
 import logging
+import os
+import sys
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pypsa
 from shapely.geometry import Point
-
-sys.path.insert(0, os.path.abspath("../scripts"))
-sys.path.insert(0, os.path.abspath("../.."))
 
 sys.path.insert(0, os.path.abspath("../scripts"))
 sys.path.insert(0, os.path.abspath("../.."))

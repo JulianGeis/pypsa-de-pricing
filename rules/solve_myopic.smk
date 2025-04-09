@@ -164,17 +164,17 @@ rule solve_operations_network_myopic:
         custom_extra_functionality=input_custom_extra_functionality,
     input:
         network=RESULTS
-        + "postnetworks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_lt.nc",
+        + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_lt.nc",
     output:
         network=RESULTS
-        + "postnetworks/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
+        + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
     log:
         solver=RESULTS
-        + "logs/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_st_solver.log",
+        + "logs/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st_solver.log",
         memory=RESULTS
-        + "logs/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_st_memory.log",
+        + "logs/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st_memory.log",
         python=RESULTS
-        + "logs/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_st_python.log",
+        + "logs/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st_python.log",
     threads: solver_threads
     resources:
         mem_mb=config_provider("solving", "mem_mb"),
@@ -182,7 +182,7 @@ rule solve_operations_network_myopic:
     benchmark:
         (
             RESULTS
-            + "benchmarks/solve_sector_network/base_s_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_st"
+            + "benchmarks/solve_sector_network/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st"
         )
     conda:
         "../envs/environment.yaml"

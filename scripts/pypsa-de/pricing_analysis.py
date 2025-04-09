@@ -179,14 +179,11 @@ def get_supply_demand(n, buses, timestep, co2_add_on=False):
             "load",
         ]:  # alter values for load shedding
             volume_bid = p
-            mc = (
-                p
-                * max(
-                    n.generators.loc[gen].marginal_cost_quadratic,
-                    n.generators_t.marginal_cost_quadratic.loc[timestep, gen],
-                )
-                + n.generators.loc[gen].marginal_cost
-            )
+            if "load-shedding" in n.generators_t.marginal_cost_quadratic:
+                mcq = n.generators_t.marginal_cost_quadratic.loc[timestep, gen]
+            else: 
+                mcq = n.generators.loc[gen].marginal_cost_quadratic
+            mc = p * mcq + n.generators.loc[gen].marginal_cost
             mc_final = mc
 
         supply.loc[gen] = [
@@ -977,9 +974,9 @@ if __name__ == "__main__":
             bid[year] = get_all_supply_prices(n, bus)
             ask[year] = get_all_demand_prices(n, bus)
 
-        with open(snakemake.output.pricing + "ask.pkl", "wb") as file:
+        with open(snakemake.output.pricing + "/ask.pkl", "wb") as file:
             pickle.dump(ask, file)
-        with open(snakemake.output.pricing + "bid.pkl", "wb") as file:
+        with open(snakemake.output.pricing + "/bid.pkl", "wb") as file:
             pickle.dump(bid, file)
 
     # # debugging
