@@ -1011,7 +1011,7 @@ def additional_functionality(n, snapshots, snakemake):
 
     # add_h2_derivate_limit(n, investment_year, constraints["limits_volume_max"])
 
-    # # force_boiler_profiles_existing_per_load(n)
+    # force_boiler_profiles_existing_per_load(n)
     # force_boiler_profiles_existing_per_boiler(n)
 
     # if isinstance(constraints["co2_budget_national"], dict):
@@ -1028,14 +1028,6 @@ def additional_functionality(n, snapshots, snakemake):
     if snakemake.config["emissions_upstream"]["enable"]:
         limit_countries = constraints["co2_budget_national"][investment_year]
         emissions_upstream(n, limit_countries, snakemake)
-    #     add_co2limit_country(
-    #         n,
-    #         limit_countries,
-    #         snakemake,
-    #         debug=snakemake.config["run"]["debug_co2_limit"],
-    #     )
-    # else:
-    #     logger.warning("No national CO2 budget specified!")
 
-    # if investment_year == 2020:
-    #     adapt_nuclear_output(n)
+    if investment_year == 2020:
+        adapt_nuclear_output(n)

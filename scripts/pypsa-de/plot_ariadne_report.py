@@ -1104,7 +1104,7 @@ def plot_price_duration_curve(
     aggregate=True,
     model_run="Model run",
     regions=["DE"],
-    y_lim_values=[-50, 300],
+    y_lim_values=[-50, 400],
     language="english",
 ):
     # # only plot 2030 onwards

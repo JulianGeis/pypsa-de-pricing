@@ -4,17 +4,17 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250409-Pricing-Merge
+  prefix: 20250410-Pricing-Test
 
   name:
   # - KN2045_Bal_v4
-  # - KN2045_Bal_v4_voll
+  - KN2045_Bal_v4_voll
   # - KN2045_Bal_v4_voll_1H 
   # - KN2045_Bal_v4_24H
   # - KN2045_Bal_v4_365H
   # - KN2045_Bal_v4_elastic5GW
-  - KN2045_Bal_v4_elasticAll
-  - KN2045_Bal_v4_elasticPWL
+  # - KN2045_Bal_v4_elasticAll
+  # - KN2045_Bal_v4_elasticPWL
   # - KN2045_Bal_v4_upstream
 
   scenarios:
@@ -107,7 +107,7 @@ countries:
 
 renewable:
   onwind:
-    capacity_per_sqkm: 1.4
+    capacity_per_sqkm: 2.1 
     cutout: europe-2013-sarah3-era5
     correction_factor: 0.95
     resource:
@@ -409,25 +409,25 @@ solving:
           DE:
             2020: 54.5
             2025: 69
-            2030: 157 # EEG2023 Ziel für 2035
-            2035: 250
+            2030: 115 # EEG2023 Ziel für 2030
+            2035: 160 # EEG2023 Ziel für 2040
             2040: 250
-            2045: 250
+            2045: 350
         offwind:
           DE:
             2020: 7.8
             2025: 11.3
-            2030: 31.3 # uba Projektionsbericht
-            2035: 70
-            2040: 70
+            2030: 29.3 # uba Projektionsbericht and NEP without delayed BalWin 3
+            2035: 50 # Planned projects until 2035 (offshore_connection_points.csv) -1.3 GW for potential delays
+            2040: 65   # Planned projects until 2040 -1.5 GW for potential retirments
             2045: 70
         solar:
           DE:
             2020: 53.7
-            2025: 128 # EEG2023; assumes for 2026: 128 GW, assuming a fair share reached by end of 2025
-            2030: 309 # EEG2023 Ziel für 2035
-            2035: 1000
-            2040: 1000
+            2025: 110 # EEG2023; assumes for 2026: 128 GW, assuming a fair share reached by end of 2025
+            2030: 235 # PV Ziel 2030 + 20 GW
+            2035: 400
+            2040: 800
             2045: 1000
       # Store:
       #   co2 sequestered:
@@ -496,56 +496,56 @@ solving:
               # EEG2023; Ziel for 2024: 88 GW and for 2026: 128 GW,
               # assuming at least 1/3 of difference reached in 2025
             2025: 101
-            2030: 101
+            2030: 101 # EEG2023 Ziel bis 2030: 215 GW
             2035: 101
             2040: 101
             2045: 101
     # boundary condition of maximum volumes
     # limits_volume_max:
-    #   # constrain electricity import in TWh
-    #   electricity_import:
-    #     DE:
-    #       2020: -20
-    #       2025: 0
-    #       2030: 0
-    #       2035: 40
-    #       2040: 80
-    #       2045: 125
-    #   electrolysis:
-    #   # boundary condition lower?
-    #     DE:
-    #       2020: 0
-    #       2025: 5
-    #       2030: 45
-    #       2035: 130
-    #       2040: 215
-    #       2045: 300
-    #   h2_derivate_import:
-    #   # boundary condition lower?
-    #     DE:
-    #       2020: 0
-    #       2025: 0
-    #       2030: 10
-    #       2035: 105
-    #       2040: 200
-    #       2045: 300
-    #   h2_import:
-    #   # boundary condition lower?
-    #     DE:
-    #       2020: 0
-    #       2025: 5
-    #       2030: 15
-    #       2035: 115
-    #       2040: 220
-    #       2045: 325
-    #   FT_production:
-    #     DE:
-    #       2020: 200
-    #       2025: 200
-    #       2030: 200
-    #       2035: 200
-    #       2040: 200
-    #       2045: 200
+      # constrain electricity import in TWh
+      # electricity_import:
+      #   DE:
+      #     2020: -20
+      #     2025: 0
+      #     2030: 0
+      #     2035: 40
+      #     2040: 80
+      #     2045: 125
+      # electrolysis:
+      # # boundary condition lower?
+      #   DE:
+      #     2020: 0
+      #     2025: 5
+      #     2030: 45
+      #     2035: 130
+      #     2040: 215
+      #     2045: 300
+      # h2_derivate_import:
+      # # boundary condition lower?
+      #   DE:
+      #     2020: 0
+      #     2025: 0
+      #     2030: 10
+      #     2035: 105
+      #     2040: 200
+      #     2045: 300
+      # h2_import:
+      # # boundary condition lower?
+      #   DE:
+      #     2020: 0
+      #     2025: 5
+      #     2030: 15
+      #     2035: 115
+      #     2040: 220
+      #     2045: 325
+      # FT_production:
+      #   DE:
+      #     2020: 200
+      #     2025: 200
+      #     2030: 200
+      #     2035: 200
+      #     2040: 200
+      #     2045: 200
     limits_volume_min:
       electrolysis:
         DE:
@@ -566,7 +566,7 @@ solving:
 
   solver:
     name: gurobi
-    options: gurobi-elastic
+    options: gurobi-default
 
   solver_options:
       gurobi-elastic: # elastic cases still getting suboptimal solutions but making sense
@@ -790,4 +790,4 @@ demand_modelling:
 
 pricing:
   calc_bid_ask: false
-  parallel_method: spawn # fork or spawn; fork works local and spawn on cluster
+  parallel_method: fork # fork or spawn; fork works local and spawn on cluster
