@@ -1012,7 +1012,7 @@ def additional_functionality(n, snapshots, snakemake):
     # add_h2_derivate_limit(n, investment_year, constraints["limits_volume_max"])
 
     # force_boiler_profiles_existing_per_load(n)
-    # force_boiler_profiles_existing_per_boiler(n)
+    force_boiler_profiles_existing_per_boiler(n)
 
     # if isinstance(constraints["co2_budget_national"], dict):
     #     limit_countries = constraints["co2_budget_national"][investment_year]

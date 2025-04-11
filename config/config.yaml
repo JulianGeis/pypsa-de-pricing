@@ -16,7 +16,7 @@ run:
   # - KN2045_Bal_v4_elasticAll
   # - KN2045_Bal_v4_elasticPWL
   # - KN2045_Bal_v4_upstream
-  # - KN2045_Bal_v4_unconstrained
+  # - KN2045_Bal_v4_voll_unconstrained
 
   scenarios:
     enable: true
