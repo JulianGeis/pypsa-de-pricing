@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250410-Pricing-Test
+  prefix: 20250411-Pricing
 
   name:
   # - KN2045_Bal_v4
@@ -16,6 +16,7 @@ run:
   # - KN2045_Bal_v4_elasticAll
   # - KN2045_Bal_v4_elasticPWL
   # - KN2045_Bal_v4_upstream
+  # - KN2045_Bal_v4_unconstrained
 
   scenarios:
     enable: true
@@ -424,7 +425,7 @@ solving:
         solar:
           DE:
             2020: 53.7
-            2025: 110 # EEG2023; assumes for 2026: 128 GW, assuming a fair share reached by end of 2025
+            2025: 128 # EEG2023; assumes for 2026: 128 GW, assuming a fair share reached by end of 2025 (limiting this to 110 increases the co2 price in 2025 up to 110 €/MWh)
             2030: 235 # PV Ziel 2030 + 20 GW
             2035: 400
             2040: 800
@@ -481,25 +482,40 @@ solving:
       Generator:
         onwind:
           DE:
-            2030: 99    # Wind-an-Land Law 2028
-            2035: 115   # Wind-an-Land Law 2030
-            2040: 157   # target 2035
-            2045: 160   # target 2040
+            # force fast buildout
+            2030: 115    
+            2035: 157   
+            2040: 250   
+            2045: 300   
+        solar:
+          DE:
+            # force fast buildout
+            2025: 101
+            2030: 215
+            2035: 350
+            2040: 500
         offwind:
           DE:
             2030: 22.5   # 75% Wind-auf-See Law
             2035: 35
             2040: 42
             2045: 50
-        solar:
-          DE:
-              # EEG2023; Ziel for 2024: 88 GW and for 2026: 128 GW,
-              # assuming at least 1/3 of difference reached in 2025
-            2025: 101
-            2030: 101 # EEG2023 Ziel bis 2030: 215 GW
-            2035: 101
-            2040: 101
-            2045: 101
+        # pypsa-de assumptions
+        # onwind:
+        #   DE:
+        #     2030: 99    # Wind-an-Land Law 2028
+        #     2035: 115   # Wind-an-Land Law 2030
+        #     2040: 157   # target 2035
+        #     2045: 160   # target 2040
+        # solar:
+        #   DE:
+        #       # EEG2023; Ziel for 2024: 88 GW and for 2026: 128 GW,
+        #       # assuming at least 1/3 of difference reached in 2025
+        #     2025: 101
+        #     2030: 101 # EEG2023 Ziel bis 2030: 215 GW
+        #     2035: 101
+        #     2040: 101
+        #     2045: 101
     # boundary condition of maximum volumes
     # limits_volume_max:
       # constrain electricity import in TWh
@@ -717,10 +733,10 @@ offshore_nep_force:
   delay_years: 0
 
 scale_capacity:
-  # 2020:
-  #   DE:
-  #     CCGT: 10000
-  #     "urban central gas CHP": 22000
+  2020:
+    DE:
+      CCGT: 10000
+      "urban central gas CHP": 22000
 
 biomass:
   year: 2030
