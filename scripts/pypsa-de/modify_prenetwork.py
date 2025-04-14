@@ -1380,6 +1380,48 @@ def adapt_demand_modelling(n, params):
                 p_nom_extendable=False,
             )
 
+def add_co2_removal_service(n, params):
+    """
+    Add a CO2 removal service to the network.
+    """
+    investment_year = int(snakemake.wildcards.planning_horizons)
+    if investment_year != params["start_year"]:
+        logger.info(
+            f"Skipping CO2 removal service addition for year {investment_year}."
+        )
+        return
+    
+    logger.info("Adding CO2 removal service outside DE.")
+
+    n.add("Carrier", "CO2 removal service")
+
+    # n.add(
+    #     "Generator",
+    #     "CO2 removal service",
+    #     bus="co2 atmosphere",
+    #     carrier="CO2 removal service",
+    #     p_nom=params["p_nom"], 
+    #     marginal_cost=params["marginal_cost"],
+    #     p_nom_extendable=False,
+    #     p_min_pu=-1,
+    #     p_max_pu=0,
+    # )
+
+    # pypsa calculates with CO2-tonnes-equivalent not single units of CO2 -> marginal cost in €/tCO2
+    n.add(
+        "Generator",
+        "CO2 removal service",
+        bus="co2 atmosphere",
+        carrier="CO2 removal service",
+        p_nom=params["p_nom"], 
+        marginal_cost=params["marginal_cost"], 
+        p_nom_extendable=False,
+        p_min_pu=0,
+        p_max_pu=1.0,
+        sign=-1,
+    )
+
+
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -1390,8 +1432,8 @@ if __name__ == "__main__":
             opts="",
             ll="vopt",
             sector_opts="none",
-            planning_horizons="2020",
-            run="KN2045_Bal_v4_365H",
+            planning_horizons="2045",
+            run="KN2045_Bal_v4_voll",
         )
 
     configure_logging(snakemake)
@@ -1475,5 +1517,8 @@ if __name__ == "__main__":
 
     if snakemake.params.demand_modelling["enable"]:
         adapt_demand_modelling(n, snakemake.params.demand_modelling)
+
+    if snakemake.params.co2_removal_service["enable"]:
+        add_co2_removal_service(n, snakemake.params.co2_removal_service)
 
     n.export_to_netcdf(snakemake.output.network)

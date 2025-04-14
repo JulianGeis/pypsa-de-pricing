@@ -332,6 +332,7 @@ rule modify_prenetwork:
         scale_capacity=config_provider("scale_capacity"),
         emissions_upstream=config_provider("emissions_upstream"),
         demand_modelling=config_provider("demand_modelling"),
+        co2_removal_service=config_provider("co2_removal_service"),
     input:
         costs_modifications="ariadne-data/costs_{planning_horizons}-modifications.csv",
         network=resources(
@@ -638,13 +639,13 @@ rule ariadne_all:
         #     **config["scenario"],
         #     allow_missing=True,
         # ),
-        expand(
-            RESULTS
-            + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
-            run=config_provider("run", "name"),
-            **config["scenario"],
-            allow_missing=True,
-        ),
+        # expand(
+        #     RESULTS
+        #     + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
+        #     run=config_provider("run", "name"),
+        #     **config["scenario"],
+        #     allow_missing=True,
+        # ),
         exported_variables=expand(
             RESULTS + "ariadne/exported_variables_full.xlsx",
             run=config_provider("run", "name"),

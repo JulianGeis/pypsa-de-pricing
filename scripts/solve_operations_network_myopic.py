@@ -42,7 +42,7 @@ if __name__ == "__main__":
             opts="",
             ll="vopt",
             sector_opts="none",
-            planning_horizons="2020",
+            planning_horizons="2045",
             run="KN2045_Bal_v4_voll",
         )
 
@@ -58,6 +58,14 @@ if __name__ == "__main__":
     np.random.seed(solve_opts.get("seed", 123))
 
     n = pypsa.Network(snakemake.input.network)
+
+    # # co2 constraint can become infeasible bc of numerical issues (2 ways to handle it)
+    
+    # # (1) round co2 constraint to make feasible (rounding with <= softens the constraint)
+    # # n.global_constraints.loc["CO2Limit" , "constant"] = round(n.global_constraints.loc["CO2Limit" , "constant"])
+
+    # # (2) multiply co2 store e_nom_opt by 2
+    # n.stores.loc[n.stores.carrier == "co2", "e_nom_opt"] *= 2
 
     n.optimize.fix_optimal_capacities()
 
