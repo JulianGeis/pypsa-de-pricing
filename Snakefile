@@ -336,6 +336,7 @@ rule modify_prenetwork:
         renewable_oil_import=config_provider("renewable_oil_import"),
         renewable_gas_import=config_provider("renewable_gas_import"),
         biomass_import=config_provider("biomass_import"),
+        only_domestic_aviation_emissions=config_provider("only_domestic_aviation_emissions"),
     input:
         costs_modifications="ariadne-data/costs_{planning_horizons}-modifications.csv",
         network=resources(
@@ -636,19 +637,19 @@ rule ariadne_all:
             RESULTS + "ariadne/report/elec_price_duration_curve.pdf",
             run=config_provider("run", "name"),
         ),
-        # expand(
-        #     RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
-        #     run=config_provider("run", "name"),
-        #     **config["scenario"],
-        #     allow_missing=True,
-        # ),
-        # expand(
-        #     RESULTS
-        #     + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
-        #     run=config_provider("run", "name"),
-        #     **config["scenario"],
-        #     allow_missing=True,
-        # ),
+        expand(
+            RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
+            run=config_provider("run", "name"),
+            **config["scenario"],
+            allow_missing=True,
+        ),
+        expand(
+            RESULTS
+            + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
+            run=config_provider("run", "name"),
+            **config["scenario"],
+            allow_missing=True,
+        ),
         exported_variables=expand(
             RESULTS + "ariadne/exported_variables_full.xlsx",
             run=config_provider("run", "name"),

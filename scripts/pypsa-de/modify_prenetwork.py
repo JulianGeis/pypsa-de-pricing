@@ -1489,6 +1489,20 @@ def add_biomass_import(n, params, costs):
         overwrite=True,
     )
 
+def adapt_domestic_aviation_emissions(n, params):
+        
+        domestic_factor = params["domestic_factor"]
+        logger.info(
+            f"Reducing the aviation emissions to only account for domestic aviation with factor of {domestic_factor}"
+        )
+
+        aviation_links_i = n.links[
+            (n.links.index.str[:2] == "DE") & (n.links.carrier == "kerosene for aviation")
+        ].index
+        n.links.loc[ aviation_links_i , "efficiency2"] *= domestic_factor
+
+
+
 if __name__ == "__main__":
     if "snakemake" not in globals():
         snakemake = mock_snakemake(
@@ -1592,5 +1606,8 @@ if __name__ == "__main__":
 
     if snakemake.params.biomass_import["enable"]:
         add_biomass_import(n, snakemake.params.biomass_import, costs)
+
+    if snakemake.params.only_domestic_aviation_emissions:
+        adapt_domestic_aviation_emissions(n, snakemake.params.only_domestic_aviation_emissions)
 
     n.export_to_netcdf(snakemake.output.network)

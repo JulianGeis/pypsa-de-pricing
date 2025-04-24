@@ -82,63 +82,59 @@ def supply_price_link(n, link, timestep, bus, co2_add_on=False, print_steps=Fals
     return supply_price
 
 
-def demand_price_link(n, link, timestep, bus, co2_add_on=False, print_steps=False):
+def demand_price_link(n, link, timestep, bus, co2_add_on=False, print_steps=False):  
+    
     buses = ["bus0", "bus1", "bus2", "bus3", "bus4"]
-    cols = [
-        col
-        for col in n.links.columns
-        if col.startswith("bus") and n.links.loc[link, col] != ""
-    ]
-    buses = buses[: len(cols)]
+    cols = [col for col in n.links.columns if col.startswith("bus") and n.links.loc[link, col] != ""]
+    buses = buses[:len(cols)]
     loc_buses = n.links.loc[link, buses].tolist()
     demand_price = 0
-    if bus != n.links.loc[link, "bus0"]:
+
+    # calc demadn price for demadn at bus 0
+
+    if bus == n.links.loc[link, "bus0"]:
         for i, loc_bus in enumerate(loc_buses):
-            if bus != loc_bus:
-                # Revenue at other buses (other from bus)
-                efficiency_i = (
-                    -1
-                    if i == 0
-                    else as_dense(
-                        n, "Link", f"efficiency{i}" if i > 1 else "efficiency"
-                    ).loc[timestep, link]
-                )  # watch out for time dependent efficiencies of heat pumps:
-                price = n.buses_t.marginal_price.loc[timestep, loc_bus]
-                if (
-                    n.buses.loc[loc_bus, "carrier"] in ["co2", "co2 stored"]
-                ) & co2_add_on:
-                    price += n.global_constraints.loc["co2_limit_upstream-DE"].mu
-                rev = price * efficiency_i
-                if print_steps:
-                    logger.warning(
-                        f"Revenue at bus {loc_bus}: {rev} from price {price} * efficiency {efficiency_i}"
-                    )
-                demand_price += rev
+            if i > 0:
+                    # Revenue at other buses (other from bus0)
+                    efficiency_i = 1 if i == 0 else as_dense(n, "Link", f"efficiency{i}" if i > 1 else 'efficiency').loc[timestep, link] # watch out for time dependent efficiencies of heat pumps: 
+                    price = n.buses_t.marginal_price.loc[timestep, loc_bus]
+                    if (n.buses.loc[loc_bus, "carrier"] in ["co2", "co2 stored"]) & co2_add_on:
+                        price += n.global_constraints.loc["co2_limit_upstream-DE"].mu
+                    rev = price * efficiency_i
+                    if print_steps:
+                        print(f"Revenue at bus {loc_bus}: {rev} from price {price} * efficiency {efficiency_i}")
+                    demand_price += rev
+     
+        demand_price -= n.links.loc[link, 'marginal_cost']
+        if print_steps:
+            print(f"Marginal cost of {link}: {n.links.loc[link, 'marginal_cost']}")
 
-    for i, loc_bus in enumerate(loc_buses):
-        if i > 0:
-            # Revenue at other buses (other from bus0)
-            efficiency_i = (
-                1
-                if i == 0
-                else as_dense(
-                    n, "Link", f"efficiency{i}" if i > 1 else "efficiency"
-                ).loc[timestep, link]
-            )  # watch out for time dependent efficiencies of heat pumps:
-            price = n.buses_t.marginal_price.loc[timestep, loc_bus]
-            if (n.buses.loc[loc_bus, "carrier"] in ["co2", "co2 stored"]) & co2_add_on:
-                price += n.global_constraints.loc["co2_limit_upstream-DE"].mu
-            rev = price * efficiency_i
-            if print_steps:
-                logger.warning(
-                    f"Revenue at bus {loc_bus}: {rev} from price {price} * efficiency {efficiency_i}"
-                )
-            demand_price += rev
+    # calc for demand price of demand at other bus than bus 0 (e.g. methanolisation for electricity)
+    else:
+        for i, loc_bus in enumerate(loc_buses):
+                if bus != loc_bus:
+                    # Revenue at other buses (other from bus)
+                    efficiency_i = -1 if i == 0 else as_dense(n, "Link", f"efficiency{i}" if i > 1 else 'efficiency').loc[timestep, link] # watch out for time dependent efficiencies of heat pumps: 
+                    price = n.buses_t.marginal_price.loc[timestep, loc_bus]
+                    if (n.buses.loc[loc_bus, "carrier"] in ["co2", "co2 stored"]) & co2_add_on:
+                        price += n.global_constraints.loc["co2_limit_upstream-DE"].mu
+                    rev = price * efficiency_i
+                    if print_steps:
+                        print(f"Revenue at bus {loc_bus}: {rev} from price {price} * efficiency {efficiency_i}")
+                    demand_price += rev
+                else:
+                    bus_no = loc_buses.index(bus)
+                    efficiency_bus = n.links.loc[link, f"efficiency{bus_no}"] * -1
 
-    demand_price -= n.links.loc[link, "marginal_cost"]
-    if print_steps:
-        logger.warning(f"Marginal cost of {link}: {n.links.loc[link, 'marginal_cost']}")
+        demand_price -= n.links.loc[link, 'marginal_cost']
+        if print_steps:
+            print(f"Marginal cost of {link}: {n.links.loc[link, 'marginal_cost']}")
+        
+        demand_price = demand_price / efficiency_bus # adjust for efficiency of the demand bus (only needed if it is not bus 0 bc for bus 0 the efficiencfy is 1)
+        if print_steps:
+            print(f"Adjust demand price by efficiency of {bus} = {efficiency_bus}")
 
+    
     return demand_price
 
 

@@ -434,11 +434,11 @@ solving:
         co2 sequestered:
           EU:
             2020: 0
-            2025: 0 # 0 in Ariadne (model needs 13 GW)
-            2030: 20000
-            2035: 30000
-            2040: 80000
-            2045: 120000
+            2025: 0 
+            2030: 10000
+            2035: 20000
+            2040: 40000
+            2045: 80000
       Link:
         urban central resistive heater:
           DE:
@@ -832,7 +832,7 @@ demand_modelling:
       nominal: [95, 5, 10]
 
 pricing:
-  calc_bid_ask: true
+  calc_bid_ask: false
   parallel_method: fork # fork or spawn; fork works local and spawn on cluster
 
 co2_removal_service:
@@ -880,3 +880,7 @@ biomass_import:
     2035: 100e6 # 100 TWh
     2040: 100e6 # 100 TWh
     2045: 100e6 # 100 TWh
+
+only_domestic_aviation_emissions:
+  enable: true
+  domestic_factor: 0.1 
