@@ -36,6 +36,7 @@ def add_capacity_limits(n, investment_year, limits_capacity, sense="maximum"):
 
         attr = "e" if c.name == "Store" else "p"
         units = "MWh or tCO2" if c.name == "Store" else "MW"
+        bus_name = "bus0" if c.name == "Link" else "bus"
 
         for carrier in limits_capacity[c.name]:
             for ct in limits_capacity[c.name][carrier]:
@@ -49,8 +50,11 @@ def add_capacity_limits(n, investment_year, limits_capacity, sense="maximum"):
                 )
 
                 valid_components = (
-                    (c.df.index.str[:2] == ct)
-                    & (c.df.carrier.str[: len(carrier)] == carrier)
+                    (
+                        (c.df.index.str[:2] == ct) |
+                        (c.df[bus_name].map(n.buses.location) == ct)
+                    )
+                    & c.df.carrier.str.startswith(carrier)
                     & ~c.df.carrier.str.contains("thermal")
                 )  # exclude solar thermal
 

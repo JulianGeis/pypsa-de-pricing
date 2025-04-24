@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250414-Pricing-Co2Removal_300EUR_restrictDAC
+  prefix: 20250424-Pricing
 
   name:
   # - KN2045_Bal_v4
@@ -88,28 +88,28 @@ existing_capacities:
 countries: 
   - DE
 
-# # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#snapshots
-# snapshots:
-#   start: "2019-01-01"
-#   end: "2020-01-01"
-#   inclusive: 'left'
+# docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#snapshots
+snapshots:
+  start: "2019-01-01"
+  end: "2020-01-01"
+  inclusive: 'left'
 
-# atlite:
-#   default_cutout: europe-2019-sarah3-era5
-#   cutouts:
-#     europe-2019-sarah3-era5:
-#       module: [sarah, era5] # in priority order
-#       x: [-12., 42.]
-#       y: [33., 72]
-#       dx: 0.3
-#       dy: 0.3
-#       time: ['2019', '2019']
+atlite:
+  default_cutout: europe-2019-sarah3-era5
+  cutouts:
+    europe-2019-sarah3-era5:
+      module: [sarah, era5] # in priority order
+      x: [-12., 42.]
+      y: [33., 72]
+      dx: 0.3
+      dy: 0.3
+      time: ['2019', '2019']
 
 
 renewable:
   onwind:
     capacity_per_sqkm: 2.1 
-    cutout: europe-2013-sarah3-era5
+    cutout: europe-2019-sarah3-era5
     correction_factor: 0.95
     resource:
       smooth: false  #this is false until correction to onshore wind speeds from GWA implemented
@@ -133,7 +133,7 @@ renewable:
   offwind-ac:
     capacity_per_sqkm: 6
     landfall_length: 30
-    cutout: europe-2013-sarah3-era5
+    cutout: europe-2019-sarah3-era5
     correction_factor: 0.95
     resource:
       smooth: true
@@ -157,7 +157,7 @@ renewable:
   offwind-dc:
     capacity_per_sqkm: 6
     landfall_length: 30
-    cutout: europe-2013-sarah3-era5
+    cutout: europe-2019-sarah3-era5
     correction_factor: 0.95
     resource:
       smooth: true
@@ -181,20 +181,20 @@ renewable:
   offwind-float: # disabled at the moment
     landfall_length: 30
     capacity_per_sqkm: 6
-    cutout: europe-2013-sarah3-era5
+    cutout: europe-2019-sarah3-era5
     correction_factor: 0.95
   solar:
-    cutout: europe-2013-sarah3-era5
+    cutout: europe-2019-sarah3-era5
     correction_factor: 0.9 # scaling to Abbildung 36 of https://www.ise.fraunhofer.de/de/veroeffentlichungen/studien/aktuelle-fakten-zur-photovoltaik-in-deutschland.html
   solar-hsat:
-    cutout: europe-2013-sarah3-era5
+    cutout: europe-2019-sarah3-era5
     correction_factor: 0.9 # scaling to Abbildung 36 of https://www.ise.fraunhofer.de/de/veroeffentlichungen/studien/aktuelle-fakten-zur-photovoltaik-in-deutschland.html
   hydro:
-    cutout: europe-2013-sarah3-era5
+    cutout: europe-2019-sarah3-era5
 
 lines:
   dynamic_line_rating:
-    cutout: europe-2013-sarah3-era5
+    cutout: europe-2019-sarah3-era5
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
@@ -265,8 +265,8 @@ sector:
     urban central: true
     urban decentral: true
     rural: true
-  co2_spatial: true
-  biomass_spatial: true
+  co2_spatial: false
+  biomass_spatial: false
   #TBD what to include in config
   #relax so no infeasibility in 2050 with no land transport demand
   regional_methanol_demand: true  #set to true if regional CO2 constraints needed
@@ -370,8 +370,8 @@ industry:
     2040: 0.6
     2045: 0.6
     2050: 0.6
-  waste_to_energy: false
-  waste_to_energy_cc: false
+  waste_to_energy: true
+  waste_to_energy_cc: true
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#solving
 solving:
@@ -430,15 +430,15 @@ solving:
             2035: 400
             2040: 800
             2045: 1000
-      # Store:
-      #   co2 sequestered:
-      #     DE:
-      #       2020: 0
-      #       2025: 0
-      #       2030: 10000
-      #       2035: 20000
-      #       2040: 50000
-      #       2045: 80000
+      Store:
+        co2 sequestered:
+          EU:
+            2020: 0
+            2025: 0 # 0 in Ariadne (model needs 13 GW)
+            2030: 20000
+            2035: 30000
+            2040: 80000
+            2045: 120000
       Link:
         urban central resistive heater:
           DE:
@@ -460,20 +460,24 @@ solving:
             2035: 20
         DAC:
           DE:
-            2040: 3
-            2045: 3
-        # methanolisation:
-        #   DE:
-        #     2030: 5.7
-        #     2035: 5.7
-        #     2040: 5.7
-        #     2045: 5.7
-        # Fischer-Tropsch:
-        #   DE:
-        #     2030: 2.5
-        #     2035: 2.5
-        #     2040: 2.5
-        #     2045: 2.5
+            2020: 0
+            2025: 0
+            2030: 0
+            2035: 0.3
+            2040: 0.5
+            2045: 1.5
+        methanolisation:
+          DE:
+            2030: 5.7
+            2035: 5.7
+            2040: 5.7
+            2045: 5.7
+        Fischer-Tropsch:
+          DE:
+            2030: 2.5
+            2035: 2.5
+            2040: 2.5
+            2045: 2.5
         HVC to air:
           DE:
             2020: 0 # all HVC in Germany is either burned or recycled
@@ -505,17 +509,17 @@ solving:
             2040: 42
             2045: 50
         # pypsa-de assumptions
-        # onwind:
-        #   DE:
-        #     2030: 99    # Wind-an-Land Law 2028
-        #     2035: 115   # Wind-an-Land Law 2030
-        #     2040: 157   # target 2035
-        #     2045: 160   # target 2040
-        # solar:
-        #   DE:
-        #       # EEG2023; Ziel for 2024: 88 GW and for 2026: 128 GW,
-        #       # assuming at least 1/3 of difference reached in 2025
-        #     2025: 101
+        onwind:
+          DE:
+            2030: 99    # Wind-an-Land Law 2028
+            2035: 115   # Wind-an-Land Law 2030
+            2040: 157   # target 2035
+            2045: 160   # target 2040
+        solar:
+          DE:
+              # EEG2023; Ziel for 2024: 88 GW and for 2026: 128 GW,
+              # assuming at least 1/3 of difference reached in 2025
+            2025: 101
         #     2030: 101 # EEG2023 Ziel bis 2030: 215 GW
         #     2035: 101
         #     2040: 101
@@ -610,6 +614,8 @@ solving:
         AggFill: 0
         PreDual: 0
         GURO_PAR_BARDENSETHRESH: 200
+        BarHomogeneous: 1 
+        NumericFocus: 1 # 0 also fine
       gurobi-numeric-focus:
         NumericFocus: 3       # Favour numeric stability over speed
         method: 2             # barrier
@@ -768,22 +774,38 @@ biomass:
     - Sludge
     municipal solid waste:
     - Municipal waste
-  share_unsustainable_use_retained:
-    2020: 0
-    2025: 0
-    2030: 0
-    2035: 0
-    2040: 0
-    2045: 0
-    2050: 0
-  share_sustainable_potential_available:
-    2020: 1
-    2025: 1
-    2030: 1
-    2035: 1
-    2040: 1
-    2045: 1
-    2050: 1
+    share_unsustainable_use_retained:
+      2020: 1
+      2025: 0.66
+      2030: 0.33
+      2035: 0
+      2040: 0
+      2045: 0
+      2050: 0
+    share_sustainable_potential_available:
+      2020: 0
+      2025: 0.33
+      2030: 0.66
+      2035: 1
+      2040: 1
+      2045: 1
+      2050: 1
+  # share_unsustainable_use_retained:
+  #   2020: 0
+  #   2025: 0
+  #   2030: 0
+  #   2035: 0
+  #   2040: 0
+  #   2045: 0
+  #   2050: 0
+  # share_sustainable_potential_available:
+  #   2020: 1
+  #   2025: 1
+  #   2030: 1
+  #   2035: 1
+  #   2040: 1
+  #   2045: 1
+  #   2050: 1
 
 demand_modelling: 
   enable: false
@@ -815,6 +837,46 @@ pricing:
 
 co2_removal_service:
   enable: true
-  p_nom: 1e5 # CO2-tonnes-equivalent -> 1e4 can remove up to 87.6 Mio tCO2
+  p_nom: 3e3 # CO2-tonnes-equivalent -> 1e4 can remove up to 87.6 Mio tCO2 (3e3=28 Mio tCO2)
   marginal_cost: 300 # EUR/tCO2
   start_year: 2045 # when the removal service is available
+
+renewable_oil_import:
+  enable: true
+  start_year: 2030
+  p_nom:
+    2030: 1e4 # 10 GW
+    2035: 1e4 # 10 GW
+    2040: 2e4 # 20 GW
+    2045: 3e4 # 30 GW # max of 200 TWh (Ariadne Import: 210 TWH in 2045
+  marginal_cost: 
+    2030: 200 # EUR/MWh
+    2035: 180 # EUR/MWh
+    2040: 160 # EUR/MWh
+    2045: 140 # EUR/MWh
+
+renewable_gas_import:
+  enable: false
+  start_year: 2030
+  p_nom:
+    2030: 1e3 # 1 GW
+    2035: 1e4 # 10 GW
+    2040: 1e4 # 10 GW
+    2045: 2e4 # 20 GW 
+  marginal_cost: 
+    2030: 200 # EUR/MWh
+    2035: 150 # EUR/MWh
+    2040: 130 # EUR/MWh
+    2045: 120 # EUR/MWh # fossil= 40 €/MWh with co2 costs @ price of 500 €/tCO2 and specific_emissions of 0.2 tCO2/MWh = 140 €/MWh
+
+biomass_import:
+  enable: true
+  start_year: 2020
+  p_nom: 1e6 # 1 GW
+  e_sum_max: # The maximum total energy produced during a single optimization horizon. [MWh]
+    2020: 50e6 # 50 TWh
+    2025: 100e6 # 100 TWh
+    2030: 100e6 # 100 TWh
+    2035: 100e6 # 100 TWh
+    2040: 100e6 # 100 TWh
+    2045: 100e6 # 100 TWh

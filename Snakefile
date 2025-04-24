@@ -333,6 +333,9 @@ rule modify_prenetwork:
         emissions_upstream=config_provider("emissions_upstream"),
         demand_modelling=config_provider("demand_modelling"),
         co2_removal_service=config_provider("co2_removal_service"),
+        renewable_oil_import=config_provider("renewable_oil_import"),
+        renewable_gas_import=config_provider("renewable_gas_import"),
+        biomass_import=config_provider("biomass_import"),
     input:
         costs_modifications="ariadne-data/costs_{planning_horizons}-modifications.csv",
         network=resources(

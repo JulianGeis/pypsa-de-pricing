@@ -1421,7 +1421,73 @@ def add_co2_removal_service(n, params):
         sign=-1,
     )
 
+def add_renewable_oil_import(n, params):
+    
+    investment_year = int(snakemake.wildcards.planning_horizons)
+    if investment_year < params["start_year"]:
+        logger.info(
+            f"No import of renewable oil possible in year {investment_year}."
+        )
+        return
+    
+    logger.info("Adding renewable oil import from outside DE.")
 
+    n.add(
+        "Generator",
+        "Renewable oil import",
+        bus="EU renewable oil",
+        carrier="renewable oil",
+        p_nom=params["p_nom"][investment_year], 
+        marginal_cost=params["marginal_cost"][investment_year],
+        p_nom_extendable=False,
+        overwrite=True,       
+    )
+
+def add_renewable_gas_import(n, params):
+    
+    investment_year = int(snakemake.wildcards.planning_horizons)
+    if investment_year < params["start_year"]:
+        logger.info(
+            f"No import of renewable gas possible in year {investment_year}."
+        )
+        return
+    
+    logger.info("Adding renewable gas import from outside DE.")
+
+    n.add(
+        "Generator",
+        "Renewable gas import",
+        bus="EU renewable gas",
+        carrier="renewable gas",
+        p_nom=params["p_nom"][investment_year], 
+        marginal_cost=params["marginal_cost"][investment_year],
+        p_nom_extendable=False,
+        overwrite=True,
+    )
+
+
+def add_biomass_import(n, params, costs):
+    
+    investment_year = int(snakemake.wildcards.planning_horizons)
+    if investment_year < params["start_year"]:
+        logger.info(
+            f"No import of renewable gas possible in year {investment_year}."
+        )
+        return
+    
+    logger.info("Adding biomass import from outside DE.")
+
+    n.add(
+        "Generator",
+        "Solid biomass import",
+        bus="EU solid biomass",
+        carrier="solid biomass",
+        p_nom=params["p_nom"], 
+        marginal_cost=costs.at["solid biomass", "fuel"] + 0.1333 * 200, #transport costs from resources("biomass_transport_costs.csv") and avergae distance of 200 km
+        p_nom_extendable=False,
+        e_sum_max = params["e_sum_max"][investment_year],
+        overwrite=True,
+    )
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -1520,5 +1586,11 @@ if __name__ == "__main__":
 
     if snakemake.params.co2_removal_service["enable"]:
         add_co2_removal_service(n, snakemake.params.co2_removal_service)
+
+    if snakemake.params.renewable_oil_import["enable"]:
+        add_renewable_oil_import(n, snakemake.params.renewable_oil_import)
+
+    if snakemake.params.biomass_import["enable"]:
+        add_biomass_import(n, snakemake.params.biomass_import, costs)
 
     n.export_to_netcdf(snakemake.output.network)
