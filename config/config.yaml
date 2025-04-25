@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250424-Pricing
+  prefix: 20250425-Pricing
 
   name:
   # - KN2045_Bal_v4
@@ -833,53 +833,58 @@ demand_modelling:
 
 pricing:
   calc_bid_ask: false
+  parallel: false
   parallel_method: fork # fork or spawn; fork works local and spawn on cluster
 
 co2_removal_service:
   enable: true
-  p_nom: 3e3 # CO2-tonnes-equivalent -> 1e4 can remove up to 87.6 Mio tCO2 (3e3=28 Mio tCO2)
+  p_nom: 1e4 
   marginal_cost: 300 # EUR/tCO2
   start_year: 2045 # when the removal service is available
+  e_sum_max: 
+    2045: 30e6 # 30 Mio tonnes of co2
 
-renewable_oil_import:
+renewable_oil_import: # Ariadne import only in 2045 210 TWh
   enable: true
   start_year: 2030
-  p_nom:
-    2030: 1e4 # 10 GW
-    2035: 1e4 # 10 GW
-    2040: 2e4 # 20 GW
-    2045: 3e4 # 30 GW # max of 200 TWh (Ariadne Import: 210 TWH in 2045
+  p_nom: 1e5
+  e_sum_max: # The maximum total energy produced during a single optimization horizon. [MWh]
+    2030: 5e6 
+    2035: 10e6 
+    2040: 50e6 
+    2045: 200e6 
   marginal_cost: 
     2030: 200 # EUR/MWh
     2035: 180 # EUR/MWh
     2040: 160 # EUR/MWh
     2045: 140 # EUR/MWh
 
-renewable_gas_import:
-  enable: false
+renewable_gas_import: # Ariadne import only in 2045 11 TWh
+  enable: true
   start_year: 2030
-  p_nom:
-    2030: 1e3 # 1 GW
-    2035: 1e4 # 10 GW
-    2040: 1e4 # 10 GW
-    2045: 2e4 # 20 GW 
+  p_nom: 1e5
+  e_sum_max:
+    2030: 5e6 
+    2035: 5e6 
+    2040: 10e6 
+    2045: 15e6 
   marginal_cost: 
     2030: 200 # EUR/MWh
     2035: 150 # EUR/MWh
     2040: 130 # EUR/MWh
     2045: 120 # EUR/MWh # fossil= 40 €/MWh with co2 costs @ price of 500 €/tCO2 and specific_emissions of 0.2 tCO2/MWh = 140 €/MWh
 
-biomass_import:
+biomass_import: # Ariadne Import per year: 35 / 80 / 46 / 50 / 42 / 32 TWh
   enable: true
   start_year: 2020
-  p_nom: 1e6 # 1 GW
-  e_sum_max: # The maximum total energy produced during a single optimization horizon. [MWh]
-    2020: 50e6 # 50 TWh
-    2025: 100e6 # 100 TWh
-    2030: 100e6 # 100 TWh
-    2035: 100e6 # 100 TWh
-    2040: 100e6 # 100 TWh
-    2045: 100e6 # 100 TWh
+  p_nom: 1e5
+  e_sum_max: 
+    2020: 35e6
+    2025: 80e6
+    2030: 50e6
+    2035: 50e6
+    2040: 40e6
+    2045: 35e6 
 
 only_domestic_aviation_emissions:
   enable: true

@@ -619,13 +619,13 @@ if __name__ == "__main__":
             clusters=1,
             opts="",
             ll="vopt",
-            sector_opts="None",
+            sector_opts="none",
             lt_st="lt",
-            run="KN2045_Bal_v4_voll",
+            run="KN2045_Bal_v4_365H",
         )
 
     # ensure output directory exist
-    for dir in snakemake.output[2:]:
+    for dir in snakemake.output[4:]:
         if not os.path.exists(dir):
             os.makedirs(dir)
 
@@ -641,25 +641,33 @@ if __name__ == "__main__":
 
     # save as dict
     n_dict = {}
-    years = np.arange(2020, 2050, 5)
-    for i, year in enumerate(years):
+    for i, year in enumerate(planning_horizons):
         n_dict[year] = networks[i]
     networks = n_dict
 
     # Load price setting data
-    with open(snakemake.input.price_setter_s, "rb") as file:
-        results_s = pickle.load(file)
-    with open(snakemake.input.price_setter_d, "rb") as file:
-        results_d = pickle.load(file)
+    results_s = {}
+    results_d = {}
+    for year, file_s, file_d in zip(planning_horizons, snakemake.input.price_setter_s_all, snakemake.input.price_setter_d_all):
+        with open(file_s, "rb") as file:
+            results_s[year] = pickle.load(file)
+        with open(file_d, "rb") as file:
+            results_d[year] = pickle.load(file)
 
     # convert to datetime
-    for year in years:
+    for year in planning_horizons:
         results_s[year].timestep = pd.to_datetime(
             results_s[year].timestep, format=date_format
         )
         results_d[year].timestep = pd.to_datetime(
             results_d[year].timestep, format=date_format
         )
+
+    # save combined price setter files
+    with open(snakemake.output.price_setter_s, "wb") as file:
+        pickle.dump(results_s, file)
+    with open(snakemake.output.price_setter_d, "wb") as file:
+        pickle.dump(results_d, file)
 
     # update tech_colors
     colors_update = (
@@ -870,7 +878,7 @@ if __name__ == "__main__":
     # plotting - market clearing price duration curve (price taker)
     data = results_d
 
-    for year in years:
+    for year in planning_horizons:
         df = data[year][data[year].valid].copy()
         df = df[df.bidding_price.notna()]
         df.sort_values(by="marginal price @ bus", ascending=False, inplace=True)
@@ -908,7 +916,7 @@ if __name__ == "__main__":
         lmps = pd.DataFrame(n.buses_t.marginal_price[bus])
         lmps.sort_values(by=bus, ascending=False, inplace=True)
         lmps["percentage"] = np.arange(len(lmps)) / len(lmps) * 100
-        ax.plot(lmps["percentage"], lmps[bus], label=years[i], color=year_colors[i])
+        ax.plot(lmps["percentage"], lmps[bus], label=planning_horizons[i], color=year_colors[i])
 
         ax.set_ylim([-50, 300])
         ax.set_ylabel("Electricity Price [$€/MWh_{el}$")
