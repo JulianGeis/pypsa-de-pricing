@@ -139,6 +139,10 @@ def demand_price_link(n, link, timestep, bus, co2_add_on=False, print_steps=Fals
 
 
 def get_supply_demand(n, buses, timestep, co2_add_on=False):
+
+    if not isinstance(buses, list):
+        buses = [buses]
+
     # Initialize DataFrames with the required columns
     supply = pd.DataFrame(
         columns=[
@@ -460,13 +464,16 @@ def get_compressed_demand(demand, th):
 
 
 def price_setter(
-    n, bus, timestep, minimum_generation=1e-3, co2_add_on=False, suppress_warnings=False
+    n, bus, timestep, supply=None, demand=None, minimum_generation=1e-3, co2_add_on=False, suppress_warnings=False
 ):
     mp = n.buses_t.marginal_price.loc[timestep, bus]
     if not isinstance(bus, list):
         bus = [bus]
     supply, demand = get_supply_demand(n, bus, timestep, co2_add_on)
 
+    if supply is None or demand is None:
+        supply, demand = get_supply_demand(n, bus, timestep, co2_add_on)
+    
     # Filter where supply (p) is greater than 0.1 (using 1 omits the marginal generator at some times)
     th_p = minimum_generation
     drop_c_s = ["electricity distribution grid", "load", "BEV charger"]
@@ -678,59 +685,27 @@ def get_all_demand_prices(n, bus, period=None, carriers=None):
     return res
 
 
-####### parallel methods
+### parellelisation methods ###
+
 def process_bus_snapshot(args):
     """Process a single bus-snapshot combination for a specific network"""
     n, bus, snapshot, suppress_warnings = args
-    s, d = price_setter(n, bus, str(snapshot), suppress_warnings=suppress_warnings)
-    return (bus, snapshot, s, d)
-
-def process_supply_item(args):
-    """Process a single supply item (generator, storage unit, store, or link) for a specific timestamp"""
-    n, bus, item_type, item_id, timestamp, carriers = args
-
-    if item_type == "generator":
-        value = n.generators.loc[item_id].marginal_cost
-    elif item_type == "storage_unit":
-        value = (
-            n.storage_units.loc[item_id].marginal_cost
-            + n.storage_units_t.mu_energy_balance.loc[timestamp, item_id]
-            * 1
-            / n.storage_units.efficiency_dispatch.loc[item_id]
-        )
-    elif item_type == "store":
-        value = (
-            n.stores.loc[item_id].marginal_cost
-            + n.stores_t.mu_energy_balance.loc[timestamp, item_id]
-        )
-    elif item_type == "link":
-        value = supply_price_link(n, item_id, timestamp, bus)
-    else:
-        value = None
-
-    return (timestamp, item_id, value)
-
-
-def process_demand_item(args):
-    """Process a single demand item (storage unit, store, or link) for a specific timestamp"""
-    n, bus, item_type, item_id, timestamp, carriers = args
-
-    if item_type == "storage_unit":
-        value = (
-            -n.storage_units_t.mu_upper.loc[timestamp, item_id]
-            + n.storage_units_t.mu_energy_balance.loc[timestamp, item_id]
-        )
-    elif item_type == "store":
-        value = (
-            -n.stores_t.mu_upper.loc[timestamp, item_id]
-            + n.stores_t.mu_energy_balance.loc[timestamp, item_id]
-        )
-    elif item_type == "link":
-        value = demand_price_link(n, item_id, timestamp, bus)
-    else:
-        value = None
-
-    return (timestamp, item_id, value)
+    
+    # Get supply and demand outside of price_setter
+    supply, demand = get_supply_demand(n, bus, str(snapshot))
+    
+    # Pass supply and demand to price_setter
+    s, d = price_setter(
+        n, 
+        bus, 
+        str(snapshot), 
+        supply=supply, 
+        demand=demand, 
+        suppress_warnings=suppress_warnings
+    )
+    
+    # Return the results including supply and demand for saving
+    return (bus, str(snapshot), s, d, supply, demand)
 
 
 if __name__ == "__main__":
@@ -754,11 +729,6 @@ if __name__ == "__main__":
             lt_st="lt",
         )
 
-    # ensure output directory exist
-    dir = snakemake.output[-1]
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-
     configure_logging(snakemake)
     config = snakemake.config
     planning_horizons = snakemake.params.planning_horizons
@@ -769,7 +739,11 @@ if __name__ == "__main__":
     network = pypsa.Network(snakemake.input.network)
     investment_year = int(snakemake.wildcards.planning_horizons)
 
-    # create results df
+    # create results dict to collect all supply and demand data
+    supply_all = {}
+    demand_all = {}
+
+    # create results df for price setting data
     res_s = pd.DataFrame()
     res_d = pd.DataFrame()
 
@@ -778,11 +752,18 @@ if __name__ == "__main__":
         
         logger.info("")  # Adds a blank line to the log file
         logger.info(f"Calculating price setter for year {investment_year}")
+
         for bus in network.buses.query("carrier == 'AC'").index:
-            for snapshot in network.snapshots:
-                s, d = price_setter(network, bus, str(snapshot), suppress_warnings=False)
+            for snapshot in tqdm(network.snapshots.strftime(date_format), desc=f"Bus {bus}", leave=True):
+
+                supply, demand = get_supply_demand(network, bus, snapshot)
+                supply_all[snapshot] = supply
+                demand_all[snapshot] = demand
+
+                s, d = price_setter(network, bus, snapshot, supply=supply, demand=demand,  suppress_warnings=False)
                 res_s = pd.concat([res_s, s])
                 res_d = pd.concat([res_d, d])
+
 
     # with parallelisation
     else:
@@ -811,35 +792,22 @@ if __name__ == "__main__":
                 )
 
             # Collect results for this bus
-            for bus_result, snapshot_result, s, d in results:
-                res_s = pd.concat([res_s, s])
-                res_d = pd.concat([res_d, d])
+                for bus_result, snapshot_result, s, d, supply, demand in results:
+                    res_s = pd.concat([res_s, s])
+                    res_d = pd.concat([res_d, d])
+                    
+                    # Store supply and demand data
+                    supply_all[snapshot_result] = supply
+                    demand_all[snapshot_result] = demand
    
 
     # Save results
+    with open(snakemake.output.supply, "wb") as file:
+        pickle.dump(supply_all, file)
+    with open(snakemake.output.demand, "wb") as file:
+        pickle.dump(demand_all, file)
+
     with open(snakemake.output.price_setter_s, "wb") as file:
         pickle.dump(res_s, file)
     with open(snakemake.output.price_setter_d, "wb") as file:
         pickle.dump(res_d, file)
-
-    if snakemake.params.pricing["calc_bid_ask"]:
-
-        # obtain all supply (bid) and demand (ask) prices
-        bus = network.buses.query("carrier == 'AC'").index[0]
-        logger.info(f"Calculating supply and demand prices for year {investment_year}")
-        supply_carriers = network.statistics.supply(bus_carrier="AC", nice_names=False).droplevel(0).index.unique()
-        demand_carriers = network.statistics.withdrawal(bus_carrier="AC", nice_names=False).droplevel(0).index.unique()
-        supply_prices = get_all_supply_prices(network, bus, carriers=supply_carriers)
-        demand_prices = get_all_demand_prices(network, bus, carriers=demand_carriers)
-
-        with open(snakemake.output.pricing + f"/supply_prices_{investment_year}.pkl", "wb") as file:
-            pickle.dump(supply_prices, file)
-        with open(snakemake.output.pricing + f"/demand_prices_{investment_year}.pkl", "wb") as file:
-            pickle.dump(demand_prices, file)
-
-    # # debugging
-    # path = "/home/julian-geis/repos/01_pricing-paper/pricing_analysis/data/results/20241031-OneNode-DownstreamVsUpstream-NoDistGrid"
-    # results_s = pickle.load(open(path + "/res_1cl_3H_s.pkl", "rb"))
-    # results_d = pickle.load(open(path + "/res_1cl_3H_d.pkl", "rb"))
-    # bid = pickle.load(open(path + "/bid.pkl", "rb"))
-    # ask = pickle.load(open(path + "/ask.pkl", "rb"))

@@ -776,9 +776,10 @@ rule pricing_analysis:
     input:
         network=RESULTS + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc"
     output:
+        supply=RESULTS + "ariadne/pricing/analysis_{clusters}_{opts}_{sector_opts}_{lt_st}/supply_{planning_horizons}.pkl",
+        demand=RESULTS + "ariadne/pricing/analysis_{clusters}_{opts}_{sector_opts}_{lt_st}/demand_{planning_horizons}.pkl",
         price_setter_s=RESULTS + "ariadne/pricing/analysis_{clusters}_{opts}_{sector_opts}_{lt_st}/price_setter_s_{planning_horizons}.pkl",
         price_setter_d=RESULTS + "ariadne/pricing/analysis_{clusters}_{opts}_{sector_opts}_{lt_st}/price_setter_d_{planning_horizons}.pkl",
-        pricing=directory(RESULTS + "ariadne/pricing/analysis_{clusters}_{opts}_{sector_opts}_{lt_st}/{planning_horizons}"),
     threads: 32
     resources:
         mem_mb=30000,
