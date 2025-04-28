@@ -593,7 +593,7 @@ solving:
     options: gurobi-default
 
   solver_options:
-      gurobi-elastic: # elastic cases still getting suboptimal solutions but making sense
+      gurobi-pricing-elastic: # elastic cases still getting suboptimal solutions but making sense
         method: 2
         crossover: 1
         BarConvTol: 1.e-8
@@ -605,7 +605,7 @@ solving:
         AggFill: -1 # default
         BarHomogeneous: 1
         threads: 8 # not sure if that makes a difference
-      gurobi-default:
+      gurobi-pricing-default:
         threads: 8
         method: 2 # barrier
         crossover: 0
@@ -616,26 +616,35 @@ solving:
         GURO_PAR_BARDENSETHRESH: 200
         BarHomogeneous: 1 
         NumericFocus: 1 # 0 also fine
-      gurobi-numeric-focus:
-        NumericFocus: 3       # Favour numeric stability over speed
-        method: 2             # barrier
-        crossover: 0          # do not use crossover
-        BarHomogeneous: 1     # Use homogeneous barrier if standard does not converge
-        BarConvTol: 1.e-5
-        FeasibilityTol: 1.e-4
-        OptimalityTol: 1.e-4
-        ObjScale: -0.5
-        threads: 8
-        Seed: 123
-      gurobi-fallback:        # Use gurobi defaults
-        crossover: 0
-        method: 2             # barrier
-        BarHomogeneous: 1     # Use homogeneous barrier if standard does not converge
-        BarConvTol: 1.e-5
-        FeasibilityTol: 1.e-5
-        OptimalityTol: 1.e-5
-        Seed: 123
-        threads: 8
+ gurobi-default:
+      threads: 8
+      method: 2 # barrier
+      crossover: 0
+      BarConvTol: 1.e-6
+      Seed: 123
+      AggFill: 0
+      PreDual: 0
+      GURO_PAR_BARDENSETHRESH: 200
+    gurobi-numeric-focus:
+      NumericFocus: 3       # Favour numeric stability over speed
+      method: 2             # barrier
+      crossover: 0          # do not use crossover
+      BarHomogeneous: 1     # Use homogeneous barrier if standard does not converge
+      BarConvTol: 1.e-5
+      FeasibilityTol: 1.e-4
+      OptimalityTol: 1.e-4
+      ObjScale: -0.5
+      threads: 8
+      Seed: 123
+    gurobi-fallback:        # Use gurobi defaults
+      crossover: 0
+      method: 2             # barrier
+      BarHomogeneous: 1     # Use homogeneous barrier if standard does not converge
+      BarConvTol: 1.e-5
+      FeasibilityTol: 1.e-5
+      OptimalityTol: 1.e-5
+      Seed: 123
+      threads: 8
 
   # Pricing Paper Fabian
   # solver_options:
