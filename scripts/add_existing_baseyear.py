@@ -102,8 +102,7 @@ def add_existing_renewables(
             "url": "https://zenodo.org/records/10952917/files/IRENASTAT_capacities_2000-2023.csv",
         }
     }
-
-    countries = snakemake.config["countries"]  # noqa: F841
+    
     irena = pm.data.IRENASTAT(config=config_data).powerplant.convert_country_to_alpha2()
     irena = irena.query("Country in @countries")
     irena = irena.groupby(["Technology", "Country", "Year"]).Capacity.sum()

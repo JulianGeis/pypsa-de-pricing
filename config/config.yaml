@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250425-Pricing
+  prefix: 20250428-Pricing
 
   name:
   # - KN2045_Bal_v4
@@ -108,7 +108,7 @@ atlite:
 
 renewable:
   onwind:
-    capacity_per_sqkm: 2.1 
+    capacity_per_sqkm: 1.4 
     cutout: europe-2019-sarah3-era5
     correction_factor: 0.95
     resource:
@@ -412,8 +412,8 @@ solving:
             2025: 69
             2030: 115 # EEG2023 Ziel für 2030
             2035: 160 # EEG2023 Ziel für 2040
-            2040: 250
-            2045: 350
+            2040: 200
+            2045: 250
         offwind:
           DE:
             2020: 7.8
