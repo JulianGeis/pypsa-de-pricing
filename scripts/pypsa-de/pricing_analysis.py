@@ -463,133 +463,164 @@ def get_compressed_demand(demand, th):
     return grouped_df
 
 
+def find_closest_items(df, price_col, mp, thresholds=[1e-4, 1e-1]):
+    """
+    Find items with price values close to the marginal price (mp).
+    Returns all items within the first threshold that matches, or the single closest item.
+    
+    Args:
+        df: DataFrame containing the items
+        price_col: Column name with price values to compare
+        mp: Marginal price to compare against
+        thresholds: List of thresholds to try in order
+        
+    Returns:
+        DataFrame with matching items
+    """
+    # Calculate absolute differences once
+    df = df.copy()
+    df['price_diff'] = (df[price_col] - mp).abs()
+    
+    # Try each threshold in sequence
+    for threshold in thresholds:
+        matches = df[df['price_diff'] <= threshold]
+        if not matches.empty:
+            # Remove the helper column before returning
+            return matches.drop(columns=['price_diff'])
+    
+    # If no matches within thresholds, return the single closest item
+    return df.loc[[df['price_diff'].idxmin()]].drop(columns=['price_diff'])
+
+
 def price_setter(
-    n, bus, timestep, supply=None, demand=None, minimum_generation=1e-3, co2_add_on=False, suppress_warnings=False
+    n:pypsa.Network, bus:str, timestep:str, supply=None, demand=None, minimum_generation=1e-3, co2_add_on=False, suppress_warnings=False
 ):
     mp = n.buses_t.marginal_price.loc[timestep, bus]
-    if not isinstance(bus, list):
-        bus = [bus]
-    supply, demand = get_supply_demand(n, bus, timestep, co2_add_on)
+    bus = [bus]
 
     if supply is None or demand is None:
         supply, demand = get_supply_demand(n, bus, timestep, co2_add_on)
+
     
-    # Filter where supply (p) is greater than 0.1 (using 1 omits the marginal generator at some times)
+    # Filter where generation / consumption is greater than threshold (using 1 omits the marginal generator at some times)
     th_p = minimum_generation
     drop_c_s = ["electricity distribution grid", "load", "BEV charger"]
-    supply = supply[(supply.p > th_p) & ~(supply.carrier.isin(drop_c_s))]
-    demand = demand[demand.p > th_p]
+    supply = supply[(supply.p > th_p) & ~(supply.carrier.isin(drop_c_s))].copy()
+    demand = demand[demand.p > th_p].copy()
 
-    # Find supply items where 'mc_final' is equal to the marginal price
-    supply_closest = supply[supply["mc_final"] == mp]
-    demand_closest = demand[demand["bidding_price"] == mp]
+    # Find supply and demand items close to marginal price
+    sc = find_closest_items(supply, "mc_final", mp).copy()
+    dc = find_closest_items(demand, "bidding_price", mp).copy()
 
-    # If no exact match, find the closest supply item to the marginal price
-    if supply_closest.empty:
-        closest_index = (supply["mc_final"] - mp).abs().argsort()[:1]
-        supply_closest = supply.iloc[closest_index]
-    else:
-        closest_index = (supply["mc_final"] - mp).abs().argsort()[:1]
-        supply_closest = pd.concat(
-            [supply_closest, supply.iloc[closest_index]]
-        ).drop_duplicates()
-
-    if demand_closest.empty:
-        closest_index = (demand["bidding_price"] - mp).abs().argsort()[:1]
-        demand_closest = demand.iloc[closest_index]
-    else:
-        closest_index = (demand["bidding_price"] - mp).abs().argsort()[:1]
-        demand_closest = pd.concat(
-            [demand_closest, demand.iloc[closest_index]]
-        ).drop_duplicates()
-
-    sc = supply_closest.copy()
     sc["bus"] = bus[0]
     sc["timestep"] = timestep
-    sc["supply_price"] = supply.mc_final[sc.index]
+    sc["supply_price"] = sc["mc_final"]
     sc["marginal price @ bus"] = mp
-    sc["sp - mp"] = sc.loc[:, "supply_price"] - sc.loc[:, "marginal price @ bus"]
-    sc["capacity_usage"] = sc.loc[:, "p"] / sc.loc[:, "volume_bid"]
+    sc["sp - mp"] = sc["supply_price"] - mp
+    sc["capacity_usage"] = sc["p"] / sc["volume_bid"].replace(0, np.nan)
     sc["valid"] = True
-    msg_s = ""
 
-    ### checks
-    # diff of marginal price at bus and supply price
-    if abs(sc["sp - mp"].values[0]) > 0.1:
-        sc["valid"] = False
-        msg_s = f"Warning: Supply price differs from market clearing price by {sc['sp - mp'].values[0]}; supply_price: {supply.mc_final[sc.index].iloc[0]}, marginal_price @ bus: {mp} (timestep {timestep}) \n"
-
-    # check if capacity is used more than 0.99
-    if sc["capacity_usage"].values[0] > 0.99:
-        sc["valid"] = False
-        msg_s += f"Warning: Marginal generator uses full capacity {sc['capacity_usage'].values[0]} (timestep {timestep}) \n"
-
-    # check if generation is less than 1e-2
-    if sc["capacity_usage"].values[0] < 1e-2:
-        sc["valid"] = False
-        msg_s += f"Warning: Marginal generator generates very low amount: amount = {sc.loc[:, 'p']}; capacity usage = {sc['capacity_usage'].values[0]} (timestep {timestep}) \n"
-
-    # supply until marginal generator differs from real supply (with tolerance)
-    # p_s = supply[supply.p > th_p].sort_values(by="mc_final", ascending=True)[:supply_closest.index[0]].p.sum()
-    p_s = supply[(supply.p > th_p) & (supply.mc_final <= (mp + 0.1))].p.sum()
-    p_s_true = n.statistics.supply(bus_carrier="AC", aggregate_time=False)[
-        timestep
-    ].sum()
-    if abs(p_s - p_s_true) > 10:
-        # sc["valid"] = False
-        msg_s += f"Warning: Supply until marginal generator plus tolerance of {0.1} €/MWh does not match the total supply {p_s} != {p_s_true} (timestep {timestep}) \n"
-
-    # check if mg is the one with the highest mc which is running (what is running?) with tolerance
-
-    dc = demand_closest.copy()
     dc["bus"] = bus[0]
     dc["timestep"] = timestep
-    dc["bidding_price"] = demand.bidding_price[dc.index]
-    dc["marginal price @ bus"] = mp
-    dc["bp - mp"] = dc.loc[:, "bidding_price"] - dc.loc[:, "marginal price @ bus"]
-    dc["capacity_usage"] = dc.loc[:, "p"] / dc.loc[:, "volume_demand"]
+    dc["bp - mp"] = dc["bidding_price"] - mp
+    dc["capacity_usage"] = dc["p"] / dc["volume_demand"].replace(0, np.nan)
     dc["valid"] = True
+
+
+    # Global validation thresholds
+    CHECK_PRICE_DIFF = 1e-2        # €/MWh maximum diff from clearing price
+    CHECK_FULL_CAPA_USAGE = 0.99   # % maximum usage of capacity
+    CHECK_LOW_CAPA_USAGE = 1e-2    # minimum usage of capacity
+    CHECK_LOW_GEN_CON = 10         # MW minimum generation or consumption
+    CHECK_SUPPLY_DEMAND_DIFF = 10  # MW maximum diff between supply and demand
+
+    # Initialize message containers
+    msg_s = ""
     msg_d = ""
 
-    ### checks
-    # diff of marginal price at bus and supply price
-    if abs(dc["bp - mp"].values[0]) > 0.1:
-        dc["valid"] = False
-        msg_d = f"Warning: Demand price differs from market clearing price by {dc['bp - mp'].values[0]}; demand_price: {demand.bidding_price[dc.index].iloc[0]}, marginal_price @ bus: {mp} (timestep {timestep}) \n"
+    # --- Supply validation ---
+    # Create validation mask for each condition
+    price_diff_mask_s = abs(sc["sp - mp"]) > CHECK_PRICE_DIFF
+    high_capacity_mask_s = sc["capacity_usage"] > CHECK_FULL_CAPA_USAGE
+    low_capacity_mask_s = (sc["capacity_usage"] < CHECK_LOW_CAPA_USAGE) & (sc["p"] <= CHECK_LOW_GEN_CON)
 
-    # check if capacity is used more than 0.99
-    if dc["capacity_usage"].values[0] > 0.99:
-        dc["valid"] = False
-        msg_d += f"Warning: Marginal consumer uses full capacity {dc['capacity_usage'].values[0]} (timestep {timestep})\n"
+    # Apply all validation masks at once
+    sc["valid"] = ~(price_diff_mask_s | high_capacity_mask_s | low_capacity_mask_s)
 
-    # check if consumption is less than 1e-2
-    if dc["capacity_usage"].values[0] < 1e-2:
-        dc["valid"] = False
-        msg_d += f"Warning: Marginal consumer consumes very low amount: amount = {dc.loc[:, 'p']}; capacity usage = {dc['capacity_usage'].values[0]} (timestep {timestep})\n"
+    # Generate messages only for invalid rows
+    for idx, row in sc[~sc["valid"]].iterrows():
+        row_msg = f"Supply item at index {idx} invalid (timestep {timestep}):\n"
+        
+        if price_diff_mask_s.loc[idx]:
+            row_msg += f"  - Price difference: {row['sp - mp']:.6f}, supply_price: {row['supply_price']:.6f}, marginal_price @ bus: {mp:.6f}\n"
+        
+        if high_capacity_mask_s.loc[idx]:
+            row_msg += f"  - High capacity usage: {row['capacity_usage']:.6f}\n"
+        
+        if low_capacity_mask_s.loc[idx]:
+            row_msg += f"  - Very low generation: amount = {row['p']:.6f} ≤ {CHECK_LOW_GEN_CON}, capacity usage = {row['capacity_usage']:.6f} < {CHECK_LOW_CAPA_USAGE}\n"
+        
+        msg_s += row_msg
 
-    # demand until least price taker differs from real demand
+    # Separate check for total supply
+    p_s = supply[(supply.p > th_p) & (supply.mc_final <= (mp + 0.1))].p.sum()
+    p_s_true = n.statistics.supply(bus_carrier="AC", aggregate_time=False)[timestep].sum()
+
+    if abs(p_s - p_s_true) > CHECK_SUPPLY_DEMAND_DIFF:
+        msg_s += f"Warning: Supply mismatch - calculated: {p_s:.2f}, actual: {p_s_true:.2f} (timestep {timestep})\n"
+
+    # --- Demand validation --- 
+    # Create validation masks for demand
+    price_diff_mask_d = abs(dc["bp - mp"]) > CHECK_PRICE_DIFF
+    high_capacity_mask_d = dc["capacity_usage"] > CHECK_FULL_CAPA_USAGE
+    low_capacity_mask_d = (dc["capacity_usage"] < CHECK_LOW_CAPA_USAGE) & (dc["p"] <= CHECK_LOW_GEN_CON)
+
+    # Apply all validation masks at once
+    dc["valid"] = ~(price_diff_mask_d | high_capacity_mask_d | low_capacity_mask_d)
+
+    # Generate messages only for invalid demand rows
+    for idx, row in dc[~dc["valid"]].iterrows():
+        row_msg = f"Demand item at index {idx} invalid (timestep {timestep}):\n"
+        
+        if price_diff_mask_d.loc[idx]:
+            row_msg += f"  - Price difference: {row['bp - mp']:.6f}, bidding_price: {row['bidding_price']:.6f}, marginal_price @ bus: {mp:.6f}\n"
+        
+        if high_capacity_mask_d.loc[idx]:
+            row_msg += f"  - High capacity usage: {row['capacity_usage']:.6f}\n"
+        
+        if low_capacity_mask_d.loc[idx]:
+            row_msg += f"  - Very low consumption: amount = {row['p']:.6f} ≤ {CHECK_LOW_GEN_CON}, capacity usage = {row['capacity_usage']:.6f} < {CHECK_LOW_CAPA_USAGE}\n"
+        
+        msg_d += row_msg
+
+    # Demand check for total demand
     d_s = demand[(demand.p > th_p) & (demand.bidding_price >= (mp - 0.1))].p.sum()
-    d_s_true = n.statistics.withdrawal(bus_carrier="AC", aggregate_time=False)[
-        timestep
-    ].sum()
-    if abs(d_s - d_s_true) > 10:
-        # dc["valid"] = False
-        msg_d += f"Warning: Demand until least price taker minus tolerance of {0.1} €/MWh does not match the total demand {d_s} != {d_s_true} (timestep {timestep}) \n"
+    d_s_true = n.statistics.withdrawal(bus_carrier="AC", aggregate_time=False)[timestep].sum()
 
+    if abs(d_s - d_s_true) > CHECK_SUPPLY_DEMAND_DIFF:
+        msg_d += f"Warning: Demand mismatch - calculated: {d_s:.2f}, actual: {d_s_true:.2f} (timestep {timestep})\n"
+
+    # Display warnings if not suppressed
     if not suppress_warnings:
         if not (sc["valid"].any() or dc["valid"].any()):
-            logger.warning(
-                f"Warning: No valid price setting technology found for bus {bus} at timestep {timestep}"
-            )
+            logger.warning(f"Warning: No valid price setting technology found for bus {bus} at timestep {timestep}")
             logger.warning(msg_s)
             logger.warning(msg_d)
+        
+        # Check if supply and demand are equal
+        if abs(p_s - d_s) > CHECK_SUPPLY_DEMAND_DIFF:
+            logger.info(f"Info: Supply until marginal gen ({p_s:.2f}) and demand until least price taker ({d_s:.2f}) differs by {abs(p_s - d_s):.2f} (timestep {timestep})")
+    
+    # only return valid rows or the closest to the clearing price if no valid rows
+    if not sc["valid"].any():
+        sc = sc.loc[sc["sp - mp"].abs().idxmin()].to_frame().T 
+    else:
+        sc = sc[sc["valid"]]
 
-    # check if supply and demand are equal
-    if abs(p_s - d_s) > 10:
-        if not suppress_warnings:
-            logger.info(
-                f"Info: Supply until marginal gen ({p_s}) and demand until least price taker ({d_s})differs by {abs(p_s - d_s)} (timestep {timestep})"
-            )
+    if not dc["valid"].any():
+        dc = dc.loc[dc["bp - mp"].abs().idxmin()].to_frame().T
+    else:
+        dc = dc[dc["valid"]]
 
     return sc, dc
 

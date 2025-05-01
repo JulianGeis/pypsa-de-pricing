@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250430-Pricing
+  prefix: 20250501-Pricing
 
   name:
   # - KN2045_Bal_v4
@@ -108,7 +108,7 @@ atlite:
 
 renewable:
   onwind:
-    capacity_per_sqkm: 1.4 
+    capacity_per_sqkm: 1.4
     cutout: europe-2019-sarah3-era5
     correction_factor: 0.95
     resource:
