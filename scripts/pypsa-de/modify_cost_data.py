@@ -41,11 +41,11 @@ if __name__ == "__main__":
     if "snakemake" not in globals():
         snakemake = mock_snakemake(
             "modify_cost_data",
-            planning_horizons="2020",
+            planning_horizons="2025",
             file_path="../data/costs/",
-            file_name="costs_2020.csv",
+            file_name="costs_2025.csv",
             cost_horizon="mean",
-            run="KN2045_Bal_v4",
+            run="KN2045_Bal_v4_voll",
         )
     configure_logging(snakemake)
 
@@ -101,6 +101,11 @@ if __name__ == "__main__":
             f"NEP year {snakemake.params.NEP} is not in modifications file. Falling back to NEP2021."
         )
         modifications = modifications.query("source != 'NEP2023'")
+
+    if snakemake.params.modify_cost["fuel_defaults"]:
+        modifications.drop(index=("coal", "fuel"), inplace=True)
+        modifications.drop(index=("gas", "fuel"), inplace=True)
+        modifications.drop(index=("oil", "fuel"), inplace=True)
 
     costs.loc[modifications.index] = modifications
     logger.info(

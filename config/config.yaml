@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250428-Pricing
+  prefix: 20250430-Pricing
 
   name:
   # - KN2045_Bal_v4
@@ -881,3 +881,6 @@ biomass_import: # Ariadne Import per year: 35 / 80 / 46 / 50 / 42 / 32 TWh
 only_domestic_aviation_emissions:
   enable: true
   domestic_factor: 0.1 
+
+modify_cost:
+  fuel_defaults: true
