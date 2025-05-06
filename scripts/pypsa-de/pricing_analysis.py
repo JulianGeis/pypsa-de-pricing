@@ -463,7 +463,7 @@ def get_compressed_demand(demand, th):
     return grouped_df
 
 
-def find_closest_items(df, price_col, mp, thresholds=[1e-4, 1e-1]):
+def find_closest_items(df, price_col, mp, thresholds=[1e-3, 1e-2]):
     """
     Find items with price values close to the marginal price (mp).
     Returns all items within the first threshold that matches, or the single closest item.
@@ -493,7 +493,7 @@ def find_closest_items(df, price_col, mp, thresholds=[1e-4, 1e-1]):
 
 
 def price_setter(
-    n:pypsa.Network, bus:str, timestep:str, supply=None, demand=None, minimum_generation=1e-3, co2_add_on=False, suppress_warnings=False
+    n:pypsa.Network, bus:str, timestep:str, supply=None, demand=None, minimum_generation=1e-1, co2_add_on=False, suppress_warnings=False
 ):
     mp = n.buses_t.marginal_price.loc[timestep, bus]
     bus = [bus]
@@ -522,6 +522,8 @@ def price_setter(
 
     dc["bus"] = bus[0]
     dc["timestep"] = timestep
+    dc["bidding_price"] = demand.bidding_price[dc.index]
+    dc["marginal price @ bus"] = mp
     dc["bp - mp"] = dc["bidding_price"] - mp
     dc["capacity_usage"] = dc["p"] / dc["volume_demand"].replace(0, np.nan)
     dc["valid"] = True
