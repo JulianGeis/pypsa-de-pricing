@@ -639,14 +639,20 @@ rule ariadne_all:
             run=config_provider("run", "name"),
         ),
         expand(
-            RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
+            RESULTS
+            + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
             run=config_provider("run", "name"),
             **config["scenario"],
             allow_missing=True,
         ),
         expand(
-            RESULTS
-            + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
+            RESULTS + "ariadne/pricing/price_setter_s_{lt_st}.pkl",
+            run=config_provider("run", "name"),
+            **config["scenario"],
+            allow_missing=True,
+        ),
+        expand(
+            RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
             run=config_provider("run", "name"),
             **config["scenario"],
             allow_missing=True,
@@ -825,17 +831,10 @@ rule pricing_analysis:
 #     script:
 #         "scripts/pypsa-de/pricing_analysis.py"
 
-
-rule pricing_plots:
+rule pricing_processing:
     params:
         planning_horizons=config_provider("scenario", "planning_horizons"),
-        plotting=config_provider("plotting"),
         run=config_provider("run", "name"),
-        NEP_year=config_provider("costs", "NEP"),
-        hours=config_provider("clustering", "temporal", "resolution_sector"),
-        transmission_projects=config_provider(
-            "transmission_projects", "new_link_capacity"
-        ),
     input:
         networks=lambda wildcards: expand(
             RESULTS
@@ -858,12 +857,57 @@ rule pricing_plots:
             **{k: v for k, v in config["scenario"].items() if k != "lt_st"},
             allow_missing=True,
         ),
+        supply_all=lambda wildcards: expand(
+            RESULTS
+            + "ariadne/pricing/analysis_{clusters}_{opts}_{sector_opts}_{lt_st}/supply_{planning_horizons}.pkl",
+            lt_st=wildcards.lt_st,
+            **{k: v for k, v in config["scenario"].items() if k != "lt_st"},
+            allow_missing=True,
+        ),
+        demand_all=lambda wildcards: expand(
+            RESULTS
+            + "ariadne/pricing/analysis_{clusters}_{opts}_{sector_opts}_{lt_st}/demand_{planning_horizons}.pkl",
+            lt_st=wildcards.lt_st,
+            **{k: v for k, v in config["scenario"].items() if k != "lt_st"},
+            allow_missing=True,
+        ),       
     output:
-        elec_pdc=RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
-        price_setting_dev=RESULTS
-        + "ariadne/pricing/price_setting_development_{lt_st}.png",
         price_setter_s=RESULTS + "ariadne/pricing/price_setter_s_{lt_st}.pkl",
         price_setter_d=RESULTS + "ariadne/pricing/price_setter_d_{lt_st}.pkl",
+        price_setter_s_all=RESULTS + "ariadne/pricing/price_setter_s_all_{lt_st}.pkl",
+        price_setter_d_all=RESULTS + "ariadne/pricing/price_setter_d_all_{lt_st}.pkl",
+        bid=RESULTS + "ariadne/pricing/bid_{lt_st}.pkl",
+        ask=RESULTS + "ariadne/pricing/ask_{lt_st}.pkl",
+        mapped_bid=RESULTS + "ariadne/pricing/mapped_bid_{lt_st}.pkl",
+        mapped_ask=RESULTS + "ariadne/pricing/mapped_ask_{lt_st}.pkl",
+    resources:
+        mem_mb=10000,
+    log:
+        RESULTS + "logs/pricing_processing_{lt_st}.log",
+    script:
+        "scripts/pypsa-de/pricing_processing.py"
+
+rule pricing_plots:
+    params:
+        planning_horizons=config_provider("scenario", "planning_horizons"),
+        plotting=config_provider("plotting"),
+        run=config_provider("run", "name"),
+    input:
+        networks=lambda wildcards: expand(
+            RESULTS
+            + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_{lt_st}.nc",
+            lt_st=wildcards.lt_st,
+            **{k: v for k, v in config["scenario"].items() if k != "lt_st"},
+            allow_missing=True,
+        ),
+        price_setter_s=RESULTS + "ariadne/pricing/price_setter_s_{lt_st}.pkl",
+        price_setter_d=RESULTS + "ariadne/pricing/price_setter_d_{lt_st}.pkl",   
+    output:
+        elec_pdc=RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
+        price_setting_supply_dev=RESULTS
+        + "ariadne/pricing/price_setting_development_supply_{lt_st}.png",
+        price_setting_demand_dev=RESULTS
+        + "ariadne/pricing/price_setting_development_demand_{lt_st}.png",
         pricing=directory(RESULTS + "ariadne/pricing/plots_{lt_st}"),
         merit_order_3cases=directory(
             RESULTS + "ariadne/pricing/plots_{lt_st}/merit_order_3cases"

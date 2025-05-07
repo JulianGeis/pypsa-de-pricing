@@ -555,57 +555,6 @@ def plot_supply_demand_s(
     return supply_handles_labels
 
 
-def get_all_supply_prices(n, bus, period=None, carriers=None):
-    index = n.snapshots if period is None else period
-
-    # Initialize a dictionary to store results temporarily
-    res_dict = {ts: {} for ts in index}
-
-    for gen in n.generators.index[
-        (n.generators.bus == bus)
-        & ((n.generators.carrier.isin(carriers)) if carriers is not None else True)
-    ]:
-        marginal_cost = n.generators.loc[gen].marginal_cost
-        for ts in index:
-            res_dict[ts][gen] = marginal_cost
-
-    for su in n.storage_units.index[
-        (n.storage_units.bus == bus)
-        & ((n.storage_units.carrier.isin(carriers)) if carriers is not None else True)
-    ]:
-        for ts in index:
-            res_dict[ts][su] = (
-                n.storage_units.loc[su].marginal_cost
-                + n.storage_units_t.mu_energy_balance.loc[ts, su]
-                * 1
-                / n.storage_units.efficiency_dispatch.loc[su]
-            )
-
-    for st in n.stores.index[
-        (n.stores.bus == bus)
-        & ((n.stores.carrier.isin(carriers)) if carriers is not None else True)
-    ]:
-        for ts in index:
-            res_dict[ts][st] = (
-                n.stores.loc[st].marginal_cost
-                + n.stores_t.mu_energy_balance.loc[ts, st]
-            )
-
-    loc_buses = ["bus" + str(i) for i in np.arange(0, 5)]
-    for link in n.links.index[
-        (n.links.bus0 != bus)
-        & (n.links[loc_buses].isin([bus]).any(axis=1))
-        & ((n.links.carrier.isin(carriers)) if carriers is not None else True)
-    ]:
-        for ts in index:
-            res_dict[ts][link] = supply_price_link(n, link, ts, bus)
-
-    # Convert the dictionary to a DataFrame
-    res = pd.DataFrame.from_dict(res_dict, orient="index")
-
-    return res
-
-
 if __name__ == "__main__":
     if "snakemake" not in globals():
         import os
@@ -625,49 +574,28 @@ if __name__ == "__main__":
         )
 
     # ensure output directory exist
-    for dir in snakemake.output[4:]:
+    for dir in snakemake.output[3:]:
         if not os.path.exists(dir):
             os.makedirs(dir)
 
     configure_logging(snakemake)
     config = snakemake.config
     planning_horizons = snakemake.params.planning_horizons
-    nhours = int(snakemake.params.hours[:-1])
-    nyears = nhours / 8760
     tech_colors = snakemake.params.plotting["tech_colors"]
 
     # Load networks
-    networks = [pypsa.Network(fn) for fn in snakemake.input.networks]
-
-    # save as dict
-    n_dict = {}
-    for i, year in enumerate(planning_horizons):
-        n_dict[year] = networks[i]
-    networks = n_dict
+    networks = {year: pypsa.Network(fn) for year, fn in zip(planning_horizons, snakemake.input.networks)}
 
     # Load price setting data
-    results_s = {}
-    results_d = {}
-    for year, file_s, file_d in zip(planning_horizons, snakemake.input.price_setter_s_all, snakemake.input.price_setter_d_all):
-        with open(file_s, "rb") as file:
-            results_s[year] = pickle.load(file)
-        with open(file_d, "rb") as file:
-            results_d[year] = pickle.load(file)
+    with open(snakemake.input.price_setter_s, 'rb') as file:
+        results_s = pickle.load(file)
+    with open(snakemake.input.price_setter_d, 'rb') as file:
+        results_d = pickle.load(file)
 
     # convert to datetime
     for year in planning_horizons:
-        results_s[year].timestep = pd.to_datetime(
-            results_s[year].timestep, format=date_format
-        )
-        results_d[year].timestep = pd.to_datetime(
-            results_d[year].timestep, format=date_format
-        )
-
-    # save combined price setter files
-    with open(snakemake.output.price_setter_s, "wb") as file:
-        pickle.dump(results_s, file)
-    with open(snakemake.output.price_setter_d, "wb") as file:
-        pickle.dump(results_d, file)
+        results_s[year].timestep = pd.to_datetime(results_s[year].timestep, format=date_format)
+        results_d[year].timestep = pd.to_datetime(results_d[year].timestep, format=date_format)
 
     # update tech_colors
     colors_update = (
@@ -938,103 +866,46 @@ if __name__ == "__main__":
         carriers.extend(df.carrier.unique().tolist())
     carriers = list(set(carriers))
 
-    df_res = pd.DataFrame(index=planning_horizons, columns=carriers)
-    df_res_absolut = pd.DataFrame(index=planning_horizons, columns=carriers)
+    df_res = pd.DataFrame(index = planning_horizons, columns = carriers)
+    df_res_absolut = pd.DataFrame(index = planning_horizons, columns = carriers)
 
     for year in planning_horizons:
         df = data[year][data[year]["valid"] == True].copy()
         df = df[df.supply_price.notna()]
-        res = df.carrier.value_counts() / df.carrier.value_counts().sum()
-        res_absolut = df.carrier.value_counts()
-        df_res.loc[year] = res[res > 0.03]
-        df_res_absolut.loc[year] = res_absolut[res_absolut > 100]
+        res = df.carrier.value_counts()
+        df_res.loc[year] = res[res > 0.03 * len(df)]
 
-    df_s_grouped = df_res_absolut.T.groupby(carrier_groups).sum().T
-    df_s_grouped = pd.concat(
-        [
-            df_s_grouped,
-            df_res_absolut.loc[:, ~df_res_absolut.columns.isin(carrier_groups.keys())],
-        ],
-        axis=1,
-    )
-    df_s_grouped = df_s_grouped[df_s_grouped.sum().sort_values(ascending=False).index]
+    df_res.dropna(axis=1, how="all", inplace=True) 
+    df_res = df_res[df_res.isnull().sum(0).sort_values(ascending=1).index]
+    df_res.plot(kind="bar", stacked=True, figsize=(8, 6), color=[tech_colors[carrier] for carrier in df_res.columns]) # bar or area
+    plt.title(f"Price setter distribution for electricity")
+    plt.xlabel("year")
+    plt.ylabel("Price setter")
+    plt.legend(bbox_to_anchor=(1, 1),fancybox=True, shadow=True, ncol=1)
+    plt.savefig(snakemake.output.price_setting_supply_dev,bbox_inches="tight")
 
     # demand
     data = results_d
     carriers = []
     for year in planning_horizons:
-        df = data[year][data[year]["valid"]].copy()
+        df = data[year][data[year]["valid"] == True].copy()
         carriers.extend(df.carrier.unique().tolist())
     carriers = list(set(carriers))
 
-    df_res = pd.DataFrame(index=planning_horizons, columns=carriers)
-    df_res_absolut = pd.DataFrame(index=planning_horizons, columns=carriers)
+    df_res = pd.DataFrame(index = planning_horizons, columns = carriers)
+    df_res_absolut = pd.DataFrame(index = planning_horizons, columns = carriers)
 
     for year in planning_horizons:
-        df = data[year][data[year]["valid"]].copy()
-        res = df.carrier.value_counts() / df.carrier.value_counts().sum()
-        res_absolut = df.carrier.value_counts()
-        df_res.loc[year] = res[res > 0]
-        df_res_absolut.loc[year] = res_absolut[res_absolut > 10]
+        df = data[year][data[year]["valid"] == True].copy()
+        df = df[df.bidding_price.notna()]
+        res = df.carrier.value_counts()
+        df_res.loc[year] = res[res > 0.03 * len(df)]
 
-    group_colors.update(group_colors_demand)
-
-    df_d_grouped = df_res_absolut.T.groupby(carrier_groups_d).sum().T
-    df_d_grouped = pd.concat(
-        [
-            df_d_grouped,
-            df_res_absolut.loc[
-                :, ~df_res_absolut.columns.isin(carrier_groups_d.keys())
-            ],
-        ],
-        axis=1,
-    )
-    df_d_grouped = df_d_grouped[df_d_grouped.sum().sort_values(ascending=False).index]
-
-    # combined plot
-    df_all_grouped = pd.concat([df_s_grouped, df_d_grouped], axis=1)
-    df_all_grouped = df_all_grouped.T.groupby(df_all_grouped.columns).sum().T
-    df_all_grouped = df_all_grouped.loc[:, ~(df_all_grouped == 0).all()]
-
-    res = pd.DataFrame(
-        index=planning_horizons,
-        columns=[
-            "Only supply price setter",
-            "Only demand price setter",
-            "Supply and demand price setter",
-        ],
-    )
-    for year in planning_horizons:
-        df_s = results_s[year].copy().set_index("timestep")
-        df_d = results_d[year].copy().set_index("timestep")
-        df_d = (
-            df_s.reset_index()
-            .drop_duplicates(subset=["timestep"], keep="first")
-            .set_index("timestep")
-        )
-        df_s = (
-            df_d.reset_index()
-            .drop_duplicates(subset=["timestep"], keep="first")
-            .set_index("timestep")
-        )
-        both_i = df_s[(df_s["valid"] & df_d["valid"])].index
-        only_s_i = df_s[(df_s["valid"] & ~df_d["valid"])].index
-        only_d_i = df_d[(df_d["valid"] & ~df_s["valid"])].index
-        res.loc[year] = [len(only_s_i), len(only_d_i), len(both_i)]
-
-    # Plot the data
-    fig, ax = plt.subplots(figsize=(8, 6))
-
-    color_list = [
-        group_colors.get(carrier, tech_colors.get(carrier))
-        for carrier in df_all_grouped.columns
-    ]
-    df_all_grouped.plot(
-        kind="area", stacked=True, figsize=(8, 6), color=color_list, ax=ax
-    )
-    res.plot(ax=ax, color=["black", "grey", "brown"], linestyle="--", marker="o")
-    plt.title("Development of Price setting Technology for Electricity (total)")
-    plt.xlabel("Year")
-    plt.ylabel("Price Setter [%]")
-    plt.legend(bbox_to_anchor=(1, -0.1), fancybox=True, shadow=True, ncol=4)
-    plt.savefig(snakemake.output.price_setting_dev, bbox_inches="tight")
+    df_res.dropna(axis=1, how="all", inplace=True) 
+    df_res = df_res[df_res.isnull().sum(0).sort_values(ascending=1).index]
+    df_res.plot(kind="bar", stacked=True, figsize=(8, 6), color=[tech_colors[carrier] for carrier in df_res.columns]) # bar or area
+    plt.title(f"Price setter distribution for electricity")
+    plt.xlabel("year")
+    plt.ylabel("Price setter")
+    plt.legend(bbox_to_anchor=(1, 1),fancybox=True, shadow=True, ncol=1)
+    plt.savefig(snakemake.output.price_setting_demand_dev,bbox_inches="tight")
