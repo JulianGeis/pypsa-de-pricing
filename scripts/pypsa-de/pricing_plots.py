@@ -873,7 +873,7 @@ if __name__ == "__main__":
         df = data[year][data[year]["valid"] == True].copy()
         df = df[df.supply_price.notna()]
         res = df.carrier.value_counts()
-        df_res.loc[year] = res[res > 0.03 * len(df)]
+        df_res.loc[year] = res[res > 0.01 * len(df)]
 
     df_res.dropna(axis=1, how="all", inplace=True) 
     df_res = df_res[df_res.isnull().sum(0).sort_values(ascending=1).index]
@@ -899,7 +899,7 @@ if __name__ == "__main__":
         df = data[year][data[year]["valid"] == True].copy()
         df = df[df.bidding_price.notna()]
         res = df.carrier.value_counts()
-        df_res.loc[year] = res[res > 0.03 * len(df)]
+        df_res.loc[year] = res[res > 0.01 * len(df)]
 
     df_res.dropna(axis=1, how="all", inplace=True) 
     df_res = df_res[df_res.isnull().sum(0).sort_values(ascending=1).index]
