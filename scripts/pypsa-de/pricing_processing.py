@@ -132,6 +132,13 @@ if __name__ == "__main__":
     results_s_unique = {}
     results_d_unique = {}
 
+    # ranked by marginal cost / bidding price in 2045
+    supply_candidates_generators_ranking = ['ror', 'solar', 'solar-hsat', 'onwind',  'offwind-ac', 'offwind-dc', ]
+    # ranked by  bidding price in 2020 (has no impact as they are never competing candidates)
+    supply_candidates_constant_links = ["nuclear", "lignite", "coal", "CCGT", "OCGT", "biogas", "solid biomass","oil"]
+
+    logger.info("Price setter prioritization:")
+    
     for year in planning_horizons:
 
         df_s = results_s[year].copy()
@@ -143,11 +150,27 @@ if __name__ == "__main__":
         df_s = df_s.drop_duplicates(subset=["timestep", "carrier"], keep="first").reset_index(drop=True)
         df_d = df_d.drop_duplicates(subset=["timestep", "carrier"], keep="first").reset_index(drop=True)
 
+        # candidate carriers
+        supply_carriers = results_s[year].carrier.unique()
+        demand_carriers = results_d[year].carrier.unique()
+        
         # Specify prioritization
-        supply_ranking = list(mapped_bid[year].T.groupby(level=0).mean().var(axis=1).sort_values().index)
+        manual_ranking = supply_candidates_generators_ranking + supply_candidates_constant_links
+        manual_ranking = [item for item in manual_ranking if item in supply_carriers]
+        var_ranking = list(mapped_bid[year].T.groupby(level=0).mean().var(axis=1)[supply_carriers].sort_values().index)
+        var_ranking = [item for item in var_ranking if item not in manual_ranking]
+        supply_ranking = manual_ranking + var_ranking
         supply_ranking_dict = {tech: i for i, tech in enumerate(supply_ranking)}
-        demand_ranking = list(mapped_ask[year].T.groupby(level=0).mean().var(axis=1).sort_values().index)
+        
+        demand_ranking = list(mapped_ask[year].T.groupby(level=0).mean().var(axis=1)[demand_carriers].sort_values().index)
         demand_ranking_dict = {tech: i for i, tech in enumerate(demand_ranking)}
+
+        logger.info(f"Year {year}")
+        logger.info("Supply ranking")
+        logger.info(supply_ranking)
+        logger.info("Demand ranking")
+        logger.info(demand_ranking)
+    
 
         # Choose price setter according to prioritization
         df_s["priority"] = df_s["carrier"].map(supply_ranking_dict).fillna(len(supply_ranking_dict))

@@ -509,8 +509,8 @@ def price_setter(
     demand = demand[demand.p > th_p].copy()
 
     # Find supply and demand items close to marginal price
-    sc = find_closest_items(supply, "mc_final", mp).copy()
-    dc = find_closest_items(demand, "bidding_price", mp).copy()
+    sc = find_closest_items(supply, "mc_final", mp, thresholds=[1e-3]).copy()
+    dc = find_closest_items(demand, "bidding_price", mp, thresholds=[1e-3]).copy()
 
     sc["bus"] = bus[0]
     sc["timestep"] = timestep
@@ -530,7 +530,7 @@ def price_setter(
 
 
     # Global validation thresholds
-    CHECK_PRICE_DIFF = 1e-2        # €/MWh maximum diff from clearing price
+    CHECK_PRICE_DIFF = 1e-3        # €/MWh maximum diff from clearing price
     CHECK_FULL_CAPA_USAGE = 0.99   # % maximum usage of capacity
     CHECK_LOW_CAPA_USAGE = 1e-2    # minimum usage of capacity
     CHECK_LOW_GEN_CON = 10         # MW minimum generation or consumption
