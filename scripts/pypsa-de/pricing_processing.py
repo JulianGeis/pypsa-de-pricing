@@ -191,8 +191,8 @@ if __name__ == "__main__":
         results_s_unique[year] = df_s.copy()
         results_d_unique[year] = df_d.copy()
 
-        # save combined mapped bid / ask
-        with open(snakemake.output.price_setter_s, "wb") as file:
-            pickle.dump(results_s_unique, file)
-        with open(snakemake.output.price_setter_d, "wb") as file:
-            pickle.dump(results_d_unique, file)
+    # save combined price setting results
+    with open(snakemake.output.price_setter_s, "wb") as file:
+        pickle.dump(results_s_unique, file)
+    with open(snakemake.output.price_setter_d, "wb") as file:
+        pickle.dump(results_d_unique, file)

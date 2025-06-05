@@ -1492,6 +1492,30 @@ def add_biomass_import(n, params, costs):
         overwrite=True,
     )
 
+
+def add_methanol_import(n, params, costs):
+    
+    investment_year = int(snakemake.wildcards.planning_horizons)
+    if investment_year < params["start_year"]:
+        logger.info(
+            f"No import of methanol in year {investment_year}."
+        )
+        return
+    
+    logger.info("Adding methanol import from outside DE.")
+
+    n.add(
+        "Generator",
+        "Methanol import",
+        bus="EU methanol",
+        carrier="methanol",
+        p_nom=params["p_nom"], 
+        marginal_cost=costs.at["methanol", "fuel"],
+        p_nom_extendable=False,
+        e_sum_max = params["e_sum_max"][investment_year],
+        overwrite=True,
+    )
+
 def adapt_domestic_aviation_emissions(n, params):
         
         domestic_factor = params["domestic_factor"]
@@ -1609,6 +1633,9 @@ if __name__ == "__main__":
 
     if snakemake.params.biomass_import["enable"]:
         add_biomass_import(n, snakemake.params.biomass_import, costs)
+
+    if snakemake.params.methanol_import["enable"]:
+        add_methanol_import(n, snakemake.params.methanol_import, costs)
 
     if snakemake.params.only_domestic_aviation_emissions:
         adapt_domestic_aviation_emissions(n, snakemake.params.only_domestic_aviation_emissions)

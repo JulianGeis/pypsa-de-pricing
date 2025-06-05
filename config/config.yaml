@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250501-Pricing
+  prefix: 20250603-Pricing
 
   name:
   # - KN2045_Bal_v4
@@ -269,7 +269,8 @@ sector:
   biomass_spatial: false
   #TBD what to include in config
   #relax so no infeasibility in 2050 with no land transport demand
-  regional_methanol_demand: true  #set to true if regional CO2 constraints needed
+  methanol:
+    biomass_to_methanol: true
   regional_oil_demand: true  #set to true if regional CO2 constraints needed
   regional_coal_demand: true  #set to true if regional CO2 constraints needed
   gas_network: false
@@ -468,6 +469,8 @@ solving:
             2045: 1.5
         methanolisation:
           DE:
+            2020: 0.01 # setting to 0 results in error in make_summary (no idea why ???)
+            2025: 0.01
             2030: 5.7
             2035: 5.7
             2040: 5.7
@@ -877,6 +880,18 @@ biomass_import: # Ariadne Import per year: 35 / 80 / 46 / 50 / 42 / 32 TWh
     2035: 50e6
     2040: 40e6
     2045: 35e6 
+
+methanol_import: # in 2020 and 2025
+  enable: true
+  start_year: 2020
+  p_nom: 1e5
+  e_sum_max: 
+    2020: 10e6
+    2025: 10e6
+    2030: 0
+    2035: 0
+    2040: 0
+    2045: 0 
 
 only_domestic_aviation_emissions:
   enable: true
