@@ -639,25 +639,6 @@ rule ariadne_all:
             RESULTS + "ariadne/report/elec_price_duration_curve.pdf",
             run=config_provider("run", "name"),
         ),
-        expand(
-            RESULTS
-            + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
-            run=config_provider("run", "name"),
-            **config["scenario"],
-            allow_missing=True,
-        ),
-        # expand(
-        #     RESULTS + "ariadne/pricing/price_setter_s_{lt_st}.pkl",
-        #     run=config_provider("run", "name"),
-        #     **config["scenario"],
-        #     allow_missing=True,
-        # ),
-        # expand(
-        #     RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
-        #     run=config_provider("run", "name"),
-        #     **config["scenario"],
-        #     allow_missing=True,
-        # ),
         exported_variables=expand(
             RESULTS + "ariadne/exported_variables_full.xlsx",
             run=config_provider("run", "name"),
@@ -929,3 +910,30 @@ rule pricing_plots:
         RESULTS + "logs/pricing_plots_{lt_st}.log",
     script:
         "scripts/pypsa-de/pricing_plots.py"
+
+
+# Collector rule for the _st.nc network files
+rule pricing_networks_all:
+    input:
+        expand(
+            RESULTS + "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_st.nc",
+            run=config_provider("run", "name"),
+            **config["scenario"],
+            allow_missing=True,
+        )
+
+# Collector rule for the pricing-related files
+rule pricing_all:
+    input:
+        expand(
+            RESULTS + "ariadne/pricing/price_setter_s_{lt_st}.pkl",
+            run=config_provider("run", "name"),
+            **config["scenario"],
+            allow_missing=True,
+        ),
+        expand(
+            RESULTS + "ariadne/pricing/elec_pdc_{lt_st}.png",
+            run=config_provider("run", "name"),
+            **config["scenario"],
+            allow_missing=True,
+        )

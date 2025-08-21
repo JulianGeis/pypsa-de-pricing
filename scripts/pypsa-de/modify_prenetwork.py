@@ -1302,7 +1302,40 @@ def scale_capacity(n, scaling):
                 ]
 
 
+####### Pricing Paper Implementations #######
+
 def adapt_demand_modelling(n, params):
+
+    """
+    Adapt the demand modelling in a PyPSA network by adding load-shedding or elastic demand generators.
+
+    Parameters
+    ----------
+    n : pypsa.Network
+        The PyPSA network to modify.
+    params : dict
+        Dictionary of parameters controlling demand adaptation. Possible keys:
+        - "voll": bool, add a VOLL generator if True.
+        - "voll_price": float, marginal cost for VOLL generator [€/MWh].
+        - "elastic_capa": bool, add a generator with fixed elastic capacity.
+        - "elastic_load": float, capacity of the elastic generator.
+        - "elastic_intercept": float, intercept for quadratic cost of elastic demand.
+        - "elastic_all": bool, apply elasticity to the full load profile.
+        - "elastic_pwl": str or None, key for piecewise-linear elastic demand setup.
+        - "elastic_pwl_params": dict, parameters for piecewise-linear segments (intercept, slope, nominal).
+        - "elastic_pwl_load": float, scaling factor for piecewise-linear demand.
+
+    Behavior
+    --------
+    1. Computes the total temporal load on the AC bus.
+    2. Optionally adds a VOLL (Value of Lost Load) generator.
+    3. Optionally adds elastic demand generators with:
+        - Fixed capacity
+        - Full-load elasticity
+        - Piecewise-linear elasticity (multiple segments)
+    4. Logs each action for clarity.
+    """
+        
     bus = n.buses[n.buses.carrier == "AC"].index[0]
     loads_temporal_i = n.loads[(n.loads.bus == bus) & (n.loads.p_set == 0)].index
     loads_static_i = n.loads[(n.loads.bus == bus) & (n.loads.p_set > 0)].index
@@ -1394,18 +1427,6 @@ def add_co2_removal_service(n, params):
     logger.info("Adding CO2 removal service outside DE.")
 
     n.add("Carrier", "CO2 removal service")
-
-    # n.add(
-    #     "Generator",
-    #     "CO2 removal service",
-    #     bus="co2 atmosphere",
-    #     carrier="CO2 removal service",
-    #     p_nom=params["p_nom"], 
-    #     marginal_cost=params["marginal_cost"],
-    #     p_nom_extendable=False,
-    #     p_min_pu=-1,
-    #     p_max_pu=0,
-    # )
 
     # pypsa calculates with CO2-tonnes-equivalent not single units of CO2 -> marginal cost in €/tCO2
     n.add(

@@ -1,3 +1,92 @@
+# PyPSA-DE-Pricing: One-Node Model of the German Energy System Based on PyPSA-DE
+
+> ℹ️ Please read the general documentation of **PyPSA-DE** (included at the end of this README) before using this repository.
+
+This repository contains the code to reproduce the experiments presented in the following working paper:
+
+---
+
+## Getting Started
+
+You need either **conda** or **mamba** to run the analysis.
+With conda, you can create the required environment as follows:
+
+```
+conda env create -f envs/{os}-pinned.yaml
+```
+
+Replace `{os}` with your operating system. For example, on Linux:
+
+```
+conda env create -f envs/linux-pinned.yaml
+```
+
+⚠️ It is strongly recommended to use the **pinned environment** files to ensure reproducibility and avoid package version conflicts.
+
+---
+
+## Running the Analysis
+
+Before running any scenarios, you first need to retrieve the input data from the Ariadne database:
+
+```
+snakemake -c4 retrieve_ariadne_database
+```
+
+Afterwards, you can choose from the following workflows:
+
+1. **Capacity expansion analysis (baseline):**
+
+   ```
+   snakemake ariadne_all
+   ```
+
+2. **Analysis including short-term models:**
+
+   ```
+   snakemake pricing_networks_all
+   ```
+
+3. **Full pricing analysis (recommended):**
+
+   ```
+   snakemake pricing_all
+   ```
+
+Running (3) executes all steps required to reproduce the full results.
+If your local machine has limited resources, you can restrict the number of cores, e.g. `-c4` for four cores.
+For further options, please refer to the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/).
+
+You can either run the analyses sequentially (1 → 2 → 3) or directly run the complete workflow with (3).
+
+* Networks are saved to:
+  `results/{run_name}/{scenario_name}/networks`
+
+* Pricing analysis results can be found in:
+  `results/{run_name}/{scenario_name}/ariadne/pricing`
+
+---
+
+## Implementations
+
+Scenarios are defined in:
+
+* `configs/scenarios.pricing.yaml`
+
+Key implementation files:
+
+* `scripts/pypsa-de/pricing_analysis.py`
+* `scripts/pypsa-de/pricing_processing.py`
+* `scripts/pypsa-de/pricing_plots.py`
+* `scripts/pypsa-de/modify_prenetwork.py`
+* `scripts/solve_operations_network_myopic`
+
+---
+
+Next follows the README of the underlying **PyPSA-DE** model.
+
+---
+
 # PyPSA-DE - Hochaufgelöstes, sektorengekoppeltes Modell des deutschen Energiesystems
 
 PyPSA-DE ist ein sektorengekoppeltes Energiesystem-Modell auf Basis der Toolbox [PyPSA](https://github.com/PyPSA/pypsa) und des europäischen Modells [PyPSA-Eur](https://github.com/PyPSA/pypsa-eur). Der PyPSA-DE Workflow modelliert das deutsche Energiesystem mit deutschlandspezifischen Datensätzen (MaStR, Netzentwicklungsplan,...) im Verbund mit den direkten Stromnachbarn sowie Spanien und Italien. Der Ausbau und der Betrieb von Kraftwerken, des  Strom- und Wasserstoffübertragunsnetzes und die Energieversorgung aller Sektoren werden dann in einem linearen Optimierungsproblem gelöst, mit hoher zeitlicher und räumlicher Auflösung. PyPSA-DE wurde im Rahmen des Kopernikus-Projekts [Ariadne](https://ariadneprojekt.de/) entwickelt in dem Szenarien für ein klimaneutrales Deutschland untersucht werden, und spielt eine zentrale Rolle im [Ariadne Szenarienreport](https://ariadneprojekt.de/publikation/report-szenarien-zur-klimaneutralitat-2045/), als Leitmodell für den [Sektor Energiewirtschaft und Infrastruktur](https://ariadneprojekt.de/publikation/report-szenarien-zur-klimaneutralitat-2045/#6-sektorale-perspektive-energiewirtschaft) und als eines von drei Gesamtsystemmodellen. Die Ergebnisse aus der Modellierung mit PyPSA-DE werden auch im [Ariadne-Webinar zu den Kernaussagen des Berichts](https://youtu.be/UL3KAH7e0zs) ([Folien](https://ariadneprojekt.de/media/2025/03/Ariadne_Szen2025_Webinar_Folien_Kernaussagen.pdf)) und im [Ariadne-Webinar zur Energiewirtschaft](https://youtu.be/FcmHBL1MKQA) ([Folien](https://ariadneprojekt.de/media/2025/03/Ariadne_Szen2025_Webinar_Folien_Energiewirtschaft.pdf)) vorgestellt
