@@ -59,13 +59,10 @@ if __name__ == "__main__":
 
     n = pypsa.Network(snakemake.input.network)
 
-    # # co2 constraint can become infeasible bc of numerical issues (2 ways to handle it)
+    # co2 constraint can become infeasible bc of numerical issues
     
-    # # (1) round co2 constraint to make feasible (rounding with <= softens the constraint)
-    # # n.global_constraints.loc["CO2Limit" , "constant"] = round(n.global_constraints.loc["CO2Limit" , "constant"])
-
-    # # (2) multiply co2 store e_nom_opt by 2
-    # n.stores.loc[n.stores.carrier == "co2", "e_nom_opt"] *= 2
+    # round co2 constraint to make feasible (rounding with <= softens the constraint)
+    # n.global_constraints.loc["CO2Limit" , "constant"] = round(n.global_constraints.loc["CO2Limit" , "constant"])
 
     n.optimize.fix_optimal_capacities()
 

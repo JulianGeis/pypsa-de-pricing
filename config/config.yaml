@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250603-Pricing
+  prefix: 20250821-Pricing
 
   name:
   # - KN2045_Bal_v4
@@ -803,6 +803,13 @@ biomass:
       2045: 1
       2050: 1
 
+####### Pricing Paper Implementations #######
+
+# Demand Modelling
+# Implements different demand modelling approaches
+# elastic: false -> use default demand modelling with VoLL
+# elastic: true -> use elastic demand modelling
+# elastic_pwl: default -> use piecewise linear elastic demand modelling with default parameters
 demand_modelling: 
   enable: false
   voll: false
@@ -827,10 +834,12 @@ demand_modelling:
       slope: [40, 20, 10]
       nominal: [95, 5, 10]
 
+# Parallelisation methods for the pricing scripts
 pricing:
   parallel: false
   parallel_method: fork # fork or spawn; fork works local and spawn on cluster
 
+# CO2 removal service only in 2045 30 MtCO2
 co2_removal_service:
   enable: true
   p_nom: 1e4 
@@ -839,7 +848,9 @@ co2_removal_service:
   e_sum_max: 
     2045: 30e6 # 30 Mio tonnes of co2
 
-renewable_oil_import: # Ariadne import only in 2045 210 TWh
+# Renewable Oil Import
+# Ariadne import only in 2045 200 TWh
+renewable_oil_import: 
   enable: true
   start_year: 2030
   p_nom: 1e5
@@ -854,7 +865,9 @@ renewable_oil_import: # Ariadne import only in 2045 210 TWh
     2040: 160 # EUR/MWh
     2045: 140 # EUR/MWh
 
-renewable_gas_import: # Ariadne import only in 2045 11 TWh
+# Renewable Gas Import
+# Ariadne import only in 2045 11 TWh
+renewable_gas_import: 
   enable: true
   start_year: 2030
   p_nom: 1e5
@@ -869,7 +882,9 @@ renewable_gas_import: # Ariadne import only in 2045 11 TWh
     2040: 130 # EUR/MWh
     2045: 120 # EUR/MWh # fossil= 40 €/MWh with co2 costs @ price of 500 €/tCO2 and specific_emissions of 0.2 tCO2/MWh = 140 €/MWh
 
-biomass_import: # Ariadne Import per year: 35 / 80 / 46 / 50 / 42 / 32 TWh
+# Biomass Import
+# Ariadne Import per year: 35 / 80 / 46 / 50 / 42 / 32 TWh
+biomass_import: 
   enable: true
   start_year: 2020
   p_nom: 1e5
@@ -881,6 +896,9 @@ biomass_import: # Ariadne Import per year: 35 / 80 / 46 / 50 / 42 / 32 TWh
     2040: 40e6
     2045: 35e6 
 
+# Methanol Import
+# Imports in 2020 and 2025 are necessary as the only tech to produce methanol is methanolisation
+# which is not available before 2025. In 2030, methanolisation is available and the import is not needed anymore.
 methanol_import: # in 2020 and 2025
   enable: true
   start_year: 2020
@@ -893,9 +911,11 @@ methanol_import: # in 2020 and 2025
     2040: 0
     2045: 0 
 
+# only account for domestic aviation emissions, not for international flights
 only_domestic_aviation_emissions:
   enable: true
   domestic_factor: 0.1 
 
+# decide to use the fossil fuel cost assumptions from the Ariadne project or the default ones from https://github.com/PyPSA/technology-data
 modify_cost:
   fuel_defaults: true
