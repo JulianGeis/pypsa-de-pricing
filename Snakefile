@@ -335,6 +335,7 @@ rule modify_prenetwork:
         demand_modelling=config_provider("demand_modelling"),
         co2_removal_service=config_provider("co2_removal_service"),
         renewable_oil_import=config_provider("renewable_oil_import"),
+        hydrogen_import=config_provider("hydrogen_import"),
         renewable_gas_import=config_provider("renewable_gas_import"),
         biomass_import=config_provider("biomass_import"),
         methanol_import=config_provider("methanol_import"),

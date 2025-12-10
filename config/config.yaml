@@ -4,12 +4,16 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20250821-Pricing
+  prefix: 20251210-Pricing
 
   name:
   # - KN2045_Bal_v4
-  - KN2045_Bal_v4_voll
-  # - KN2045_Bal_v4_voll_1H 
+  # - KN2045_Bal_v4_voll
+  # - KN2045_Bal_v4_voll_30k
+  # - KN2045_Bal_v4_voll_no_policy
+  # - KN2045_Bal_v4_voll_LowBEV
+  # - KN2045_Bal_v4_voll_HighBEV
+  - KN2045_Bal_v4_voll_1H 
   # - KN2045_Bal_v4_24H
   # - KN2045_Bal_v4_365H
   # - KN2045_Bal_v4_elastic5GW
@@ -192,9 +196,9 @@ renewable:
   hydro:
     cutout: europe-2019-sarah3-era5
 
-lines:
-  dynamic_line_rating:
-    cutout: europe-2019-sarah3-era5
+# lines:
+#   dynamic_line_rating:
+#     cutout: europe-2019-sarah3-era5
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
@@ -573,23 +577,23 @@ solving:
       #     2035: 200
       #     2040: 200
       #     2045: 200
-    limits_volume_min:
-      electrolysis:
-        DE:
-          2020: 0
-          2025: 0
-          2030: 0
-          2035: 0
-          2040: 0
-          2045: 0
-    limits_power_max: # in GW
-      DE:
-        2020: 15
-        2025: 15
-        2030: 20
-        2035: 25
-        2040: 30
-        2045: 35
+    # limits_volume_min:
+    #   electrolysis:
+    #     DE:
+    #       2020: 0
+    #       2025: 0
+    #       2030: 0
+    #       2035: 0
+    #       2040: 0
+    #       2045: 0
+    # limits_power_max: # in GW
+    #   DE:
+    #     2020: 15
+    #     2025: 15
+    #     2030: 20
+    #     2035: 25
+    #     2040: 30
+    #     2045: 35
 
   solver:
     name: gurobi
@@ -846,6 +850,8 @@ co2_removal_service:
   marginal_cost: 300 # EUR/tCO2
   start_year: 2045 # when the removal service is available
   e_sum_max: 
+    # 2035: 5e6 # 5 Mio tonnes of co2
+    # 2040: 15e6 # 15 Mio tonnes of co2
     2045: 30e6 # 30 Mio tonnes of co2
 
 # Renewable Oil Import
@@ -881,6 +887,22 @@ renewable_gas_import:
     2035: 150 # EUR/MWh
     2040: 130 # EUR/MWh
     2045: 120 # EUR/MWh # fossil= 40 €/MWh with co2 costs @ price of 500 €/tCO2 and specific_emissions of 0.2 tCO2/MWh = 140 €/MWh
+
+# Hydrogen Import
+# Ariadne import 40-80 TWh (2035: ~80; 2040: ~40; 2045: ~60)
+hydrogen_import: 
+  enable: false
+  start_year: 2035
+  p_nom: 1e5
+  e_sum_max:
+    2035: 80e6 
+    2040: 40e6 
+    2045: 60e6 
+  marginal_cost: 
+    2030: 200 # EUR/MWh
+    2035: 150 # EUR/MWh
+    2040: 120 # EUR/MWh
+    2045: 100 # EUR/MWh 
 
 # Biomass Import
 # Ariadne Import per year: 35 / 80 / 46 / 50 / 42 / 32 TWh

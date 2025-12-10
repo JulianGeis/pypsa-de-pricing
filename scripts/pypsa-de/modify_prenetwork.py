@@ -1466,6 +1466,28 @@ def add_renewable_oil_import(n, params):
         overwrite=True,       
     )
 
+def add_hydrogen_import(n, params):
+    
+    investment_year = int(snakemake.wildcards.planning_horizons)
+    if investment_year < params["start_year"]:
+        logger.info(
+            f"No import of hydrogen possible in year {investment_year}."
+        )
+        return
+    
+    logger.info("Adding hydrogen import from outside DE.")
+    n.add(
+        "Generator",
+        "Hydrogen import",
+        bus="DE0 0 H2",
+        carrier="H2",
+        p_nom=params["p_nom"], 
+        marginal_cost=params["marginal_cost"][investment_year],
+        e_sum_max = params["e_sum_max"][investment_year],
+        p_nom_extendable=False,
+        overwrite=True,
+    )
+
 def add_renewable_gas_import(n, params):
     
     investment_year = int(snakemake.wildcards.planning_horizons)
@@ -1657,6 +1679,9 @@ if __name__ == "__main__":
 
     if snakemake.params.methanol_import["enable"]:
         add_methanol_import(n, snakemake.params.methanol_import, costs)
+
+    if snakemake.params.hydrogen_import["enable"]:
+        add_hydrogen_import(n, snakemake.params.hydrogen_import)
 
     if snakemake.params.only_domestic_aviation_emissions:
         adapt_domestic_aviation_emissions(n, snakemake.params.only_domestic_aviation_emissions)
