@@ -493,7 +493,19 @@ def find_closest_items(df, price_col, mp, thresholds=[1e-3, 1e-2]):
 
 
 def price_setter(
-    n:pypsa.Network, bus:str, timestep:str, supply=None, demand=None, minimum_generation=1e-1, co2_add_on=False, suppress_warnings=False
+    n:pypsa.Network, 
+    bus:str, 
+    timestep:str, 
+    supply=None, 
+    demand=None, 
+    minimum_generation=1e-1, 
+    co2_add_on=False, 
+    suppress_warnings=False,
+    CHECK_PRICE_DIFF = 1e-2,        # €/MWh maximum diff from clearing price
+    CHECK_FULL_CAPA_USAGE = 0.99,   # % maximum usage of capacity
+    CHECK_LOW_CAPA_USAGE = 1e-2,    # minimum usage of capacity
+    CHECK_LOW_GEN_CON = 10,         # MW minimum generation or consumption
+    CHECK_SUPPLY_DEMAND_DIFF = 10  # MW maximum diff between supply and demand
 ):
     mp = n.buses_t.marginal_price.loc[timestep, bus]
     bus = [bus]
@@ -527,14 +539,6 @@ def price_setter(
     dc["bp - mp"] = dc["bidding_price"] - mp
     dc["capacity_usage"] = dc["p"] / dc["volume_demand"].replace(0, np.nan)
     dc["valid"] = True
-
-
-    # Global validation thresholds
-    CHECK_PRICE_DIFF = 1e-3        # €/MWh maximum diff from clearing price
-    CHECK_FULL_CAPA_USAGE = 0.99   # % maximum usage of capacity
-    CHECK_LOW_CAPA_USAGE = 1e-2    # minimum usage of capacity
-    CHECK_LOW_GEN_CON = 10         # MW minimum generation or consumption
-    CHECK_SUPPLY_DEMAND_DIFF = 10  # MW maximum diff between supply and demand
 
     # Initialize message containers
     msg_s = ""
@@ -722,7 +726,7 @@ def get_all_demand_prices(n, bus, period=None, carriers=None):
 
 def process_bus_snapshot(args):
     """Process a single bus-snapshot combination for a specific network"""
-    n, bus, snapshot, suppress_warnings = args
+    n, bus, snapshot, suppress_warnings, check_params = args
     
     # Get supply and demand outside of price_setter
     supply, demand = get_supply_demand(n, bus, str(snapshot))
@@ -734,7 +738,8 @@ def process_bus_snapshot(args):
         str(snapshot), 
         supply=supply, 
         demand=demand, 
-        suppress_warnings=suppress_warnings
+        suppress_warnings=suppress_warnings,
+        **check_params,
     )
     
     # Return the results including supply and demand for saving
@@ -780,6 +785,15 @@ if __name__ == "__main__":
     res_s = pd.DataFrame()
     res_d = pd.DataFrame()
 
+    # Extract check parameters once
+    check_params = {
+        'CHECK_PRICE_DIFF': snakemake.params.pricing.get("CHECK_PRICE_DIFF", 0.01),       
+        'CHECK_FULL_CAPA_USAGE': snakemake.params.pricing.get("CHECK_FULL_CAPA_USAGE", 0.99),
+        'CHECK_LOW_CAPA_USAGE': snakemake.params.pricing.get("CHECK_LOW_CAPA_USAGE", 0.01),   
+        'CHECK_LOW_GEN_CON': snakemake.params.pricing.get("CHECK_LOW_GEN_CON", 10),         
+        'CHECK_SUPPLY_DEMAND_DIFF': snakemake.params.pricing.get("CHECK_SUPPLY_DEMAND_DIFF", 10)
+    }
+
     # without parallelisation
     if not snakemake.params.pricing["parallel"]:
         
@@ -793,7 +807,14 @@ if __name__ == "__main__":
                 supply_all[snapshot] = supply
                 demand_all[snapshot] = demand
 
-                s, d = price_setter(network, bus, snapshot, supply=supply, demand=demand,  suppress_warnings=False)
+                s, d = price_setter(network, 
+                                    bus, 
+                                    snapshot, 
+                                    supply=supply, 
+                                    demand=demand,  
+                                    suppress_warnings=False,
+                                    **check_params,
+                )
                 res_s = pd.concat([res_s, s])
                 res_d = pd.concat([res_d, d])
 
@@ -811,7 +832,7 @@ if __name__ == "__main__":
         # For each bus in the year
         for bus in network.buses.query("carrier == 'AC'").index:
             # Prepare arguments for each snapshot
-            snapshot_args = [(network, bus, snapshot, False) for snapshot in network.snapshots]
+            snapshot_args = [(network, bus, snapshot, False, check_params) for snapshot in network.snapshots]
 
             # Process all snapshots for this bus in parallel
             with mp.Pool(processes=nprocesses) as pool:

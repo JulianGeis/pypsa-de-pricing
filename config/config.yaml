@@ -4,23 +4,27 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20251210-Pricing
+  prefix: 20251212-Pricing-Criteria
 
   name:
-  # - KN2045_Bal_v4
-  # - KN2045_Bal_v4_voll
-  # - KN2045_Bal_v4_voll_30k
-  # - KN2045_Bal_v4_voll_no_policy
-  # - KN2045_Bal_v4_voll_LowBEV
-  # - KN2045_Bal_v4_voll_HighBEV
-  - KN2045_Bal_v4_voll_1H 
-  # - KN2045_Bal_v4_24H
-  # - KN2045_Bal_v4_365H
-  # - KN2045_Bal_v4_elastic5GW
-  # - KN2045_Bal_v4_elasticAll
-  # - KN2045_Bal_v4_elasticPWL
-  # - KN2045_Bal_v4_upstream
-  # - KN2045_Bal_v4_voll_unconstrained
+  - KN2045_Bal_v4_voll # Basic scenario with VoLL at 2000 €/MWh
+  # - KN2045_Bal_v4_voll_30k # High VoLL at 30,000 €/MWh
+  # - KN2045_Bal_v4_voll_no_policy # Without nuclear/coal ban and gas-to-H2 retrofitting
+  # - KN2045_Bal_v4_voll_BEVDSM_OFF # BEV demand-side management disabled
+  # - KN2045_Bal_v4_voll_LowBEV # Reduced BEV buildout, no flexible charging
+  # - KN2045_Bal_v4_voll_HighBEVDSM # 80% flexible charging (no V2G)
+  # - KN2045_Bal_v4_voll_HighBEVDSM_V2G # 80% flexible charging with V2G
+  # - KN2045_Bal_v4_voll_HighBatteryCost # Double battery costs
+  # - KN2045_Bal_v4_voll_1H # 1-hour temporal resolution
+  # - KN2045_Bal_v4_elastic5GW # 5 GW elastic load
+  # - KN2045_Bal_v4_elasticAll # Complete load as elastic
+  # - KN2045_Bal_v4_elasticPWL # Piecewise linear elastic load
+  # - KN2045_Bal_v4_upstream # Upstream emissions enabled
+  # - KN2045_Bal_v4 # Base reference scenario (no demand modelling)
+  # - KN2045_Bal_v4_24H # 24-hour temporal resolution
+  # - KN2045_Bal_v4_365H # 365-hour temporal resolution
+  # - KN2045_Bal_v4_voll_unconstrained # Unconstrained renewable buildout
+  # - KN2045_Bal_v4_voll_2020_validation # Price validation for 2020
 
   scenarios:
     enable: true
@@ -72,11 +76,11 @@ scenario:
   - none
   planning_horizons:
   - 2020
-  - 2025
-  - 2030
-  - 2035
-  - 2040
-  - 2045
+  # - 2025
+  # - 2030
+  # - 2035
+  # - 2040
+  # - 2045
   # - 2050
   lt_st:
   - lt
@@ -838,10 +842,15 @@ demand_modelling:
       slope: [40, 20, 10]
       nominal: [95, 5, 10]
 
-# Parallelisation methods for the pricing scripts
+# Parallelisation methods and price setter criteria for the pricing scripts
 pricing:
   parallel: false
-  parallel_method: fork # fork or spawn; fork works local and spawn on cluster
+  parallel_method: fork         # fork or spawn; fork works local and spawn on cluster
+  CHECK_PRICE_DIFF: 0.01        # €/MWh maximum diff from clearing price
+  CHECK_FULL_CAPA_USAGE: 0.99   # % maximum usage of capacity
+  CHECK_LOW_CAPA_USAGE: 0.01    # minimum usage of capacity
+  CHECK_LOW_GEN_CON: 10         # MWh minimum generation or consumption
+  CHECK_SUPPLY_DEMAND_DIFF: 10  # MW maximum diff between supply and demand
 
 # CO2 removal service only in 2045 30 MtCO2
 co2_removal_service:
