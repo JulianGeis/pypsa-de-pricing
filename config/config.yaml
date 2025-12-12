@@ -4,8 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20251212-Pricing-Criteria
-
+  prefix: 20251212-Pricing-Scenarios
   name:
   - KN2045_Bal_v4_voll # Basic scenario with VoLL at 2000 €/MWh
   # - KN2045_Bal_v4_voll_30k # High VoLL at 30,000 €/MWh
@@ -15,6 +14,8 @@ run:
   # - KN2045_Bal_v4_voll_HighBEVDSM # 80% flexible charging (no V2G)
   # - KN2045_Bal_v4_voll_HighBEVDSM_V2G # 80% flexible charging with V2G
   # - KN2045_Bal_v4_voll_HighBatteryCost # Double battery costs
+  # - KN2045_Bal_v4_voll_LowBatteryCost # Half battery costs 
+  # - KN2045_Bal_v4_voll_HighElectrolysisCost # Double electrolysis costs
   # - KN2045_Bal_v4_voll_1H # 1-hour temporal resolution
   # - KN2045_Bal_v4_elastic5GW # 5 GW elastic load
   # - KN2045_Bal_v4_elasticAll # Complete load as elastic
@@ -76,11 +77,11 @@ scenario:
   - none
   planning_horizons:
   - 2020
-  # - 2025
-  # - 2030
-  # - 2035
-  # - 2040
-  # - 2045
+  - 2025
+  - 2030
+  - 2035
+  - 2040
+  - 2045
   # - 2050
   lt_st:
   - lt
@@ -897,7 +898,7 @@ renewable_gas_import:
     2040: 130 # EUR/MWh
     2045: 120 # EUR/MWh # fossil= 40 €/MWh with co2 costs @ price of 500 €/tCO2 and specific_emissions of 0.2 tCO2/MWh = 140 €/MWh
 
-# Hydrogen Import
+# Hydrogen Import ENABLED
 # Ariadne import 40-80 TWh (2035: ~80; 2040: ~40; 2045: ~60)
 hydrogen_import: 
   enable: false
