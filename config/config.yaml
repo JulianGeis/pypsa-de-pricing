@@ -4,9 +4,9 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20251212-Pricing-Scenarios
+  prefix: 20251215-Pricing-2023-Validation
   name:
-  - KN2045_Bal_v4_voll # Basic scenario with VoLL at 2000 €/MWh
+  # - KN2045_Bal_v4_voll # Basic scenario with VoLL at 2000 €/MWh
   # - KN2045_Bal_v4_voll_30k # High VoLL at 30,000 €/MWh
   # - KN2045_Bal_v4_voll_no_policy # Without nuclear/coal ban and gas-to-H2 retrofitting
   # - KN2045_Bal_v4_voll_BEVDSM_OFF # BEV demand-side management disabled
@@ -25,6 +25,7 @@ run:
   # - KN2045_Bal_v4_24H # 24-hour temporal resolution
   # - KN2045_Bal_v4_365H # 365-hour temporal resolution
   # - KN2045_Bal_v4_voll_unconstrained # Unconstrained renewable buildout
+  - KN2045_Bal_v4_voll_2023_validation # Price validation for 2023
   # - KN2045_Bal_v4_voll_2020_validation # Price validation for 2020
 
   scenarios:
@@ -32,7 +33,7 @@ run:
     manual_file: config/scenarios.manual.yaml
     file: config/scenarios.pricing.yaml
   shared_resources:
-    policy: base #stops recalculating
+    policy: false #stops recalculating
     exclude:
     - existing_heating.csv   # specify files which should not be shared between scenarios
     - costs
@@ -78,10 +79,10 @@ scenario:
   planning_horizons:
   - 2020
   - 2025
-  - 2030
-  - 2035
-  - 2040
-  - 2045
+  # - 2030
+  # - 2035
+  # - 2040
+  # - 2045
   # - 2050
   lt_st:
   - lt
@@ -208,7 +209,7 @@ renewable:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
   retrieve: true # set to false once initial data is retrieved
-  retrieve_cutout: false # set to false once initial data is retrieved
+  retrieve_cutout: true # set to false once initial data is retrieved
 clustering:
   temporal:
     resolution_sector: 3H

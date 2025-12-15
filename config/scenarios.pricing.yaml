@@ -1524,7 +1524,7 @@ KN2045_Bal_v4_voll_2020_validation:
 
   clustering:
     temporal:
-      resolution_sector: 365H
+      resolution_sector: 1H
 
   costs:
     horizon: mean
@@ -1579,6 +1579,7 @@ KN2045_Bal_v4_voll_2020_validation:
       2035: 0.7713
       2040: 0.6948
       2045: 0.6909
+
   demand_modelling: 
     enable: true
     voll: true
@@ -1688,3 +1689,213 @@ KN2045_Bal_v4_voll_2020_validation:
       correction_factor: 0.9 # scaling to Abbildung 36 of https://www.ise.fraunhofer.de/de/veroeffentlichungen/studien/aktuelle-fakten-zur-photovoltaik-in-deutschland.html
     hydro:
       cutout: europe-2020-sarah3-era5
+
+KN2045_Bal_v4_voll_2023_validation:
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  clustering:
+    temporal:
+      resolution_sector: 1H
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+  snapshots:
+    start: "2023-01-01"
+    end: "2024-01-01"
+    inclusive: 'left'
+
+  atlite:
+    default_cutout: europe-2023-sarah3-era5
+    cutouts:
+      europe-2023-sarah3-era5:
+        module: [sarah, era5] # in priority order
+        x: [-12., 42.]
+        y: [33., 72]
+        dx: 0.3
+        dy: 0.3
+        time: ['2023', '2023']
+
+  renewable:
+    onwind:
+      cutout: europe-2023-sarah3-era5
+    offwind-ac:
+      cutout: europe-2023-sarah3-era5
+    offwind-dc:
+      cutout: europe-2023-sarah3-era5
+    offwind-float: # disabled at the moment
+      cutout: europe-2023-sarah3-era5
+    solar:
+      cutout: europe-2023-sarah3-era5
+    solar-hsat:
+      cutout: europe-2023-sarah3-era5
+    hydro:
+      cutout: europe-2023-sarah3-era5
+
+KN2045_Bal_v4_voll_2013:
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  clustering:
+    temporal:
+      resolution_sector: 3H
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+  snapshots:
+    start: "2013-01-01"
+    end: "2014-01-01"
+    inclusive: 'left'
+
+  atlite:
+    default_cutout: europe-2013-sarah3-era5
+    cutouts:
+      europe-2013-sarah3-era5:
+        module: [sarah, era5] # in priority order
+        x: [-12., 42.]
+        y: [33., 72]
+        dx: 0.3
+        dy: 0.3
+        time: ['2013', '2013']
+
+  renewable:
+    onwind:
+      cutout: europe-2013-sarah3-era5
+    offwind-ac:
+      cutout: europe-2013-sarah3-era5
+    offwind-dc:
+      cutout: europe-2013-sarah3-era5
+    offwind-float: # disabled at the moment
+      cutout: europe-2013-sarah3-era5
+    solar:
+      cutout: europe-2013-sarah3-era5
+    solar-hsat:
+      cutout: europe-2013-sarah3-era5
+    hydro:
+      cutout: europe-2013-sarah3-era5
