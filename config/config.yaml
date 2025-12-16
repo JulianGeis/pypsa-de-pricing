@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20251215-Pricing-2023-Validation
+  prefix: 20251215-Pricing-More-Weather-Years
   name:
   # - KN2045_Bal_v4_voll # Basic scenario with VoLL at 2000 €/MWh
   # - KN2045_Bal_v4_voll_30k # High VoLL at 30,000 €/MWh
@@ -25,8 +25,11 @@ run:
   # - KN2045_Bal_v4_24H # 24-hour temporal resolution
   # - KN2045_Bal_v4_365H # 365-hour temporal resolution
   # - KN2045_Bal_v4_voll_unconstrained # Unconstrained renewable buildout
-  - KN2045_Bal_v4_voll_2023_validation # Price validation for 2023
+  # - KN2045_Bal_v4_voll_2023_validation # Price validation for 2023
   # - KN2045_Bal_v4_voll_2020_validation # Price validation for 2020
+  - KN2045_Bal_v4_voll_2013
+  - KN2045_Bal_v4_voll_2023
+  - KN2045_Bal_v4_voll_2020
 
   scenarios:
     enable: true
@@ -79,10 +82,10 @@ scenario:
   planning_horizons:
   - 2020
   - 2025
-  # - 2030
-  # - 2035
-  # - 2040
-  # - 2045
+  - 2030
+  - 2035
+  - 2040
+  - 2045
   # - 2050
   lt_st:
   - lt
@@ -209,7 +212,7 @@ renewable:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
   retrieve: true # set to false once initial data is retrieved
-  retrieve_cutout: true # set to false once initial data is retrieved
+  retrieve_cutout: false # set to false once initial data is retrieved
 clustering:
   temporal:
     resolution_sector: 3H

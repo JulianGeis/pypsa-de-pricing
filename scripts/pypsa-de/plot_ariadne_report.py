@@ -957,7 +957,7 @@ def plot_storage(
     savepath,
     model_run="Model run",
     start_date="2019-01-01 00:00:00",
-    end_date="2019-12-31 00",
+    end_date="2019-12-31 00:00:00",
     regions=["DE"],
 ):
     # State of charge [per unit of max] (all stores and storage units)
@@ -2729,6 +2729,7 @@ if __name__ == "__main__":
     config = snakemake.config
     planning_horizons = snakemake.params.planning_horizons
     tech_colors = snakemake.params.plotting["tech_colors"]
+    weather_year = networks[0].snapshots.year[0]
 
     # update tech_colors
     colors_update = (
@@ -2897,8 +2898,8 @@ if __name__ == "__main__":
         plot_storage(
             network=network,
             tech_colors=tech_colors,
-            start_date="2019-01-01 00:00:00",
-            end_date="2019-12-31 00:00:00",
+            start_date=f"{weather_year}-01-01 00:00:00",
+            end_date=f"{weather_year}-12-31 00:00:00",
             savepath=f"{snakemake.output.results}/storage-DE-{year}.pdf",
             model_run=snakemake.wildcards.run,
         )
@@ -3023,7 +3024,7 @@ if __name__ == "__main__":
     network = networks[planning_horizons.index(year)].copy()
     n = network
 
-    months = pd.date_range(freq="ME", **snakemake.config["snapshots"]).map(
+    months = pd.date_range(freq="ME", start=f"{weather_year}-01-01", end=f"{weather_year + 1}-01-01", inclusive="left").map(
         lambda x: x.strftime("%Y-%m")
     )
 
