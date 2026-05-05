@@ -4,9 +4,9 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20251215-Pricing-More-Weather-Years
+  prefix: 20260504-Pricing-Hydrogen-Scenarios
   name:
-  # - KN2045_Bal_v4_voll # Basic scenario with VoLL at 2000 €/MWh
+  - KN2045_Bal_v4_voll # Basic scenario with VoLL at 2000 €/MWh
   # - KN2045_Bal_v4_voll_30k # High VoLL at 30,000 €/MWh
   # - KN2045_Bal_v4_voll_no_policy # Without nuclear/coal ban and gas-to-H2 retrofitting
   # - KN2045_Bal_v4_voll_BEVDSM_OFF # BEV demand-side management disabled
@@ -27,9 +27,13 @@ run:
   # - KN2045_Bal_v4_voll_unconstrained # Unconstrained renewable buildout
   # - KN2045_Bal_v4_voll_2023_validation # Price validation for 2023
   # - KN2045_Bal_v4_voll_2020_validation # Price validation for 2020
-  - KN2045_Bal_v4_voll_2013
-  - KN2045_Bal_v4_voll_2023
-  - KN2045_Bal_v4_voll_2020
+  # - KN2045_Bal_v4_voll_2013
+  # - KN2045_Bal_v4_voll_2023
+  # - KN2045_Bal_v4_voll_2020
+  # - KN2045_Bal_v4_FreeH2Import
+  # - KN2045_Bal_v4_CheapH2Import
+  # - KN2045_Bal_v4_ModerateH2Import
+  # - KN2045_Bal_v4_ElectrolysisRestriction
 
   scenarios:
     enable: true
@@ -902,7 +906,7 @@ renewable_gas_import:
     2040: 130 # EUR/MWh
     2045: 120 # EUR/MWh # fossil= 40 €/MWh with co2 costs @ price of 500 €/tCO2 and specific_emissions of 0.2 tCO2/MWh = 140 €/MWh
 
-# Hydrogen Import ENABLED
+# Hydrogen Import DISABLED
 # Ariadne import 40-80 TWh (2035: ~80; 2040: ~40; 2045: ~60)
 hydrogen_import: 
   enable: false
