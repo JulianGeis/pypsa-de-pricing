@@ -330,7 +330,7 @@ if __name__ == "__main__":
     if snakemake.params.gaslimit_enable:
         add_gaslimit(n, snakemake.params.gaslimit, Nyears)
 
-    maybe_adjust_costs_and_potentials(n, snakemake.params["adjustments"])
+    # maybe_adjust_costs_and_potentials(n, snakemake.params["adjustments"])
 
     emission_prices = snakemake.params.costs["emission_prices"]
     if emission_prices["co2_monthly_prices"]:

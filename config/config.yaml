@@ -4,7 +4,7 @@
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: 20260504-Pricing-Hydrogen-Scenarios
+  prefix: 20260507-Pricing-Commodity-Price-Sensitivities
   name:
   - KN2045_Bal_v4_voll # Basic scenario with VoLL at 2000 €/MWh
   # - KN2045_Bal_v4_voll_30k # High VoLL at 30,000 €/MWh
@@ -30,10 +30,21 @@ run:
   # - KN2045_Bal_v4_voll_2013
   # - KN2045_Bal_v4_voll_2023
   # - KN2045_Bal_v4_voll_2020
-  # - KN2045_Bal_v4_FreeH2Import
-  # - KN2045_Bal_v4_CheapH2Import
-  # - KN2045_Bal_v4_ModerateH2Import
-  # - KN2045_Bal_v4_ElectrolysisRestriction
+  # - KN2045_Bal_v4_voll_FreeH2Import
+  # - KN2045_Bal_v4_voll_CheapH2Import
+  # - KN2045_Bal_v4_voll_CheapHighH2Import
+  # - KN2045_Bal_v4_voll_ModerateH2Import
+  # - KN2045_Bal_v4_voll_ModerateCostHighAmountH2Import
+  # - KN2045_Bal_v4_voll_ElectrolysisRestriction
+  # - KN2045_Bal_v4_voll_HalfCoalPrice
+  # - KN2045_Bal_v4_voll_DoubleCoalPrice
+  # - KN2045_Bal_v4_voll_HalfGasPrice
+  # - KN2045_Bal_v4_voll_DoubleGasPrice
+  # - KN2045_Bal_v4_voll_TripleGasPrice
+  # - KN2045_Bal_v4_voll_FiveGasPrice
+  # - KN2045_Bal_v4_voll_HalfGasAndCoalPrice
+  # - KN2045_Bal_v4_voll_DoubleGasAndCoalPrice
+
 
   scenarios:
     enable: true
@@ -889,10 +900,10 @@ renewable_oil_import:
     2040: 160 # EUR/MWh
     2045: 140 # EUR/MWh
 
-# Renewable Gas Import
+# Renewable Gas Import DISABLED
 # Ariadne import only in 2045 11 TWh
 renewable_gas_import: 
-  enable: true
+  enable: false
   start_year: 2030
   p_nom: 1e5
   e_sum_max:

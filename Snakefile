@@ -340,6 +340,7 @@ rule modify_prenetwork:
         biomass_import=config_provider("biomass_import"),
         methanol_import=config_provider("methanol_import"),
         only_domestic_aviation_emissions=config_provider("only_domestic_aviation_emissions"),
+        adjustments=config_provider("adjustments", "sector"),
     input:
         costs_modifications="ariadne-data/costs_{planning_horizons}-modifications.csv",
         network=resources(

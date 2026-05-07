@@ -2111,7 +2111,7 @@ KN2045_Bal_v4_voll_2020:
       cutout: europe-2020-sarah3-era5
 
 
-KN2045_Bal_v4_FreeH2Import:
+KN2045_Bal_v4_voll_FreeH2Import:
 # scenario with optimistic / low hydrogen import prices
 
   # Hydrogen Import ENABLED
@@ -2197,7 +2197,7 @@ KN2045_Bal_v4_FreeH2Import:
     voll_price: 2000 # €/MWh
 
 
-KN2045_Bal_v4_CheapH2Import:
+KN2045_Bal_v4_voll_CheapH2Import:
 # scenario with optimistic / low hydrogen import prices
 
   # Hydrogen Import ENABLED
@@ -2283,7 +2283,94 @@ KN2045_Bal_v4_CheapH2Import:
     voll_price: 2000 # €/MWh
 
 
-KN2045_Bal_v4_ModerateH2Import:
+KN2045_Bal_v4_voll_CheapHighH2Import:
+# scenario with optimistic / low hydrogen import prices
+
+  # Hydrogen Import ENABLED
+  # Ariadne import 40-80 TWh (2035: ~80; 2040: ~40; 2045: ~60)
+  hydrogen_import: 
+    enable: true
+    start_year: 2035
+    p_nom: 1e5
+    e_sum_max:
+      2030: 50e6
+      2035: 100e6 
+      2040: 120e6 
+      2045: 150e6 
+    marginal_cost: 
+      2030: 120 # EUR/MWh
+      2035: 100 # EUR/MWh
+      2040: 60 # EUR/MWh
+      2045: 50 # EUR/MWh 
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+
+KN2045_Bal_v4_voll_ModerateH2Import:
 # scenario with moderate hydrogen import prices
 
   # Hydrogen Import ENABLED
@@ -2296,6 +2383,93 @@ KN2045_Bal_v4_ModerateH2Import:
       2035: 80e6 
       2040: 40e6 
       2045: 60e6 
+    marginal_cost: 
+      2030: 200 # EUR/MWh
+      2035: 150 # EUR/MWh
+      2040: 120 # EUR/MWh
+      2045: 100 # EUR/MWh 
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+
+KN2045_Bal_v4_voll_ModerateCostHighAmountH2Import:
+# scenario with moderate hydrogen import prices
+
+  # Hydrogen Import ENABLED
+  # Ariadne import 40-80 TWh (2035: ~80; 2040: ~40; 2045: ~60)
+  hydrogen_import: 
+    enable: true
+    start_year: 2035
+    p_nom: 1e5
+    e_sum_max:
+      2030: 50e6
+      2035: 100e6 
+      2040: 120e6 
+      2045: 150e6 
     marginal_cost: 
       2030: 200 # EUR/MWh
       2035: 150 # EUR/MWh
@@ -2401,6 +2575,642 @@ KN2045_Bal_v4_ElectrolysisRestriction:
               2035: 10
               2040: 20
               2045: 30
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+KN2045_Bal_v4_voll_HalfCoalPrice:
+
+  adjustments:
+    electricity: false
+    sector:
+      factor:
+        generators:
+          lignite:
+            marginal_cost: 0.5
+          coal:
+            marginal_cost: 0.5
+      absolute: false
+
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+KN2045_Bal_v4_voll_DoubleCoalPrice:
+
+  adjustments:
+    electricity: false
+    sector:
+      factor:
+        generators:
+          lignite:
+            marginal_cost: 2
+          coal:
+            marginal_cost: 2
+      absolute: false
+
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+KN2045_Bal_v4_voll_HalfGasPrice:
+
+  adjustments:
+    electricity: false
+    sector:
+      factor:
+        generators:
+          gas primary:
+            marginal_cost: 0.5
+      absolute: false
+
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+KN2045_Bal_v4_voll_DoubleGasPrice:
+
+  adjustments:
+    electricity: false
+    sector:
+      factor:
+        generators:
+          gas primary:
+            marginal_cost: 2
+      absolute: false
+
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+KN2045_Bal_v4_voll_TripleGasPrice:
+
+  adjustments:
+    electricity: false
+    sector:
+      factor:
+        generators:
+          gas primary:
+            marginal_cost: 3
+      absolute: false
+
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+KN2045_Bal_v4_voll_FiveGasPrice:
+  
+  adjustments:
+    electricity: false
+    sector:
+      factor:
+        generators:
+          gas primary:
+            marginal_cost: 5
+      absolute: false
+
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+KN2045_Bal_v4_voll_HalfGasAndCoalPrice:
+  
+  adjustments:
+    electricity: false
+    sector:
+      factor:
+        generators:
+          gas primary:
+            marginal_cost: 0.5
+          lignite:
+            marginal_cost: 0.5
+          coal:
+            marginal_cost: 0.5
+      absolute: false
+
+
+  iiasa_database:
+    reference_scenario: KN2045_Bal_v4
+    fallback_reference_scenario: KN2045_Bal_v4
+  co2_budget_DE_source: KSG
+
+  costs:
+    horizon: mean
+    NEP: 2021
+    transmission: overhead   # either overhead line ("overhead") or underground cable ("underground")
+  solving:
+    constraints:
+      limits_capacity_min:
+        Link:
+          H2 Electrolysis:
+            DE:
+              2030: 5
+      co2_budget_national:
+        2020:
+          DE: 0.671
+        2025:
+          DE: 0.523
+        2030:
+          DE: 0.346
+        2035:
+          DE: 0.216
+        2040:
+          DE: 0.09
+        2045:
+          DE: -0.05
+        2050:
+          DE: -0.048
+  industry:
+    steam_biomass_fraction: 0.4
+    steam_hydrogen_fraction: 0.3
+    steam_electricity_fraction: 0.3
+
+    St_primary_fraction:
+      2020: 0.7023
+      2025: 0.705
+      2030: 0.6929
+      2035: 0.6598
+      2040: 0.6273
+      2045: 0.6047
+    DRI_fraction:
+      2020: 0.0
+      2025: 0.0
+      2030: 0.2011
+      2035: 0.496
+      2040: 0.7729
+      2045: 1.0
+  sector:
+    aviation_demand_factor:
+      2020: 1.0
+      2025: 0.9361
+      2030: 0.8558
+      2035: 0.7713
+      2040: 0.6948
+      2045: 0.6909
+  demand_modelling: 
+    enable: true
+    voll: true
+    elastic_capa: false
+    elastic_all: false
+    elastic_pwl: false # false, default, lower, higher
+    voll_price: 2000 # €/MWh
+
+KN2045_Bal_v4_voll_DoubleGasAndCoalPrice:
+  
+  adjustments:
+    electricity: false
+    sector:
+      factor:
+        generators:
+          gas primary:
+            marginal_cost: 2
+          lignite:
+            marginal_cost: 2
+          coal:
+            marginal_cost: 2
+      absolute: false
+
 
   iiasa_database:
     reference_scenario: KN2045_Bal_v4

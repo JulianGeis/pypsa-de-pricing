@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 from scripts._helpers import configure_logging, mock_snakemake, sanitize_custom_columns
 from scripts.add_electricity import load_costs
 from scripts.prepare_sector_network import lossy_bidirectional_links, prepare_costs
-
+from scripts.prepare_network import maybe_adjust_costs_and_potentials
 logger = logging.getLogger(__name__)
 
 
@@ -1674,6 +1674,9 @@ if __name__ == "__main__":
     if snakemake.params.renewable_oil_import["enable"]:
         add_renewable_oil_import(n, snakemake.params.renewable_oil_import)
 
+    if snakemake.params.renewable_gas_import["enable"]:
+        add_renewable_gas_import(n, snakemake.params.renewable_gas_import)
+
     if snakemake.params.biomass_import["enable"]:
         add_biomass_import(n, snakemake.params.biomass_import, costs)
 
@@ -1685,5 +1688,7 @@ if __name__ == "__main__":
 
     if snakemake.params.only_domestic_aviation_emissions:
         adapt_domestic_aviation_emissions(n, snakemake.params.only_domestic_aviation_emissions)
+
+    maybe_adjust_costs_and_potentials(n, snakemake.params["adjustments"])
 
     n.export_to_netcdf(snakemake.output.network)
